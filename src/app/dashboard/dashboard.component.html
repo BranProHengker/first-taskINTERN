@@ -1,0 +1,93 @@
+    <!-- Topbar -->
+    <header class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-[#303841]/80 backdrop-blur-xl sticky top-0 z-20 shrink-0">
+      <div>
+        <h1 class="text-2xl font-bold text-white tracking-tight">User Management</h1>
+        <p class="text-xs text-gray-500 mt-1">Overview of all registered system users</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 transition">
+          <span class="sr-only">Notifications</span>
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+        </button>
+        <div class="w-10 h-10 rounded-full ring-2 ring-white/10" style="background-color: var(--color-primary)"></div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-auto p-10 relative">
+      <!-- Decorative background blobs -->
+      <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div class="absolute top-10 right-10 w-96 h-96 rounded-full blur-3xl opacity-5" style="background-color: var(--color-primary)"></div>
+        <div class="absolute bottom-10 left-10 w-96 h-96 bg-white/5 rounded-full blur-3xl opacity-5"></div>
+      </div>
+
+      <div class="relative z-10">
+        <div class="flex justify-between items-center mb-8">
+           <!-- Search -->
+           <div class="relative w-64">
+             <input type="text" placeholder="Search users..." class="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:ring-0 transition-colors input-field" style="focus:border-color var(--color-primary)">
+             <svg class="w-4 h-4 text-gray-500 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+           </div>
+           
+           <button class="btn-primary px-6 py-2.5 rounded-lg text-sm shadow-lg flex items-center gap-2" style="box-shadow: 0 4px 14px 0 rgba(215, 35, 35, 0.39)">
+             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+             Add New User
+           </button>
+        </div>
+
+        <!-- Table Card -->
+        <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-white/10 bg-white/0.02 text-xs uppercase tracking-wider text-gray-400 font-medium">
+                  <th class="p-5 pl-6">User Info</th>
+                  <th class="p-5">Contact</th>
+                  <th class="p-5">Role</th>
+                  <th class="p-5 text-right pr-6">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="text-sm divide-y divide-white/5">
+                <tr *ngIf="isLoading">
+                  <td colspan="4" class="p-12 text-center text-gray-500">
+                    <div class="flex flex-col items-center gap-2">
+                      <div class="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style="border-color: var(--color-primary)"></div>
+                      <span class="text-xs uppercase tracking-widest">Loading data...</span>
+                    </div>
+                  </td>
+                </tr>
+                
+                <tr *ngFor="let user of users" class="hover:bg-white/0.03 transition duration-200 group">
+                  <td class="p-5 pl-6">
+                    <div class="flex items-center gap-4">
+                      <div class="w-10 h-10 rounded-lg bg-[#303841] border border-white/10 flex items-center justify-center text-sm font-bold shadow-inner" style="color: var(--color-primary)">
+                        {{ user.fullName.charAt(0) }}
+                      </div>
+                      <div>
+                        <div class="font-semibold text-white text-base">{{ user.fullName }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5">{{ user.companyName }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="p-5">
+                    <div class="text-gray-300">{{ user.emailAddress }}</div>
+                    <div class="text-xs text-gray-500 mt-0.5 font-mono">{{ user.telp }}</div>
+                  </td>
+                  <td class="p-5">
+                    <span class="px-2.5 py-1 rounded-md text-xs font-semibold tracking-wide bg-white/10 text-gray-300 border border-white/20 inline-flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                      {{ user.roleName }}
+                    </span>
+                  </td>
+                  <td class="p-5 text-right pr-6">
+                    <button class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-all">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
