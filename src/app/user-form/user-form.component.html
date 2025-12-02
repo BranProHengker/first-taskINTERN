@@ -1,0 +1,68 @@
+<div class="h-full flex flex-col p-10">
+  <div class="mb-8 flex items-center gap-4">
+    <a routerLink="/dashboard" class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+    </a>
+    <div>
+      <h2 class="text-2xl font-bold text-white tracking-tight">{{ isEditMode ? 'Edit User' : 'Add New User' }}</h2>
+      <p class="text-xs text-gray-500 mt-1">{{ isEditMode ? 'Update user information' : 'Register a new user to the system' }}</p>
+    </div>
+  </div>
+
+  <div class="glass-panel p-8 rounded-2xl max-w-2xl">
+    <form (ngSubmit)="onSubmit()" class="space-y-6">
+      <div class="grid grid-cols-2 gap-6">
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Full Name</label>
+          <input type="text" [(ngModel)]="user.fullName" name="fullName" class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0" required>
+        </div>
+        
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Role</label>
+          <select [(ngModel)]="user.roleName" name="roleName" class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0 bg-[#303841] text-white">
+            <option value="Admin">Admin</option>
+            <option value="User">User</option>
+            <option value="Developer">Developer</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Email Address</label>
+        <input type="email" [(ngModel)]="user.emailAddress" name="email" class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0" required>
+      </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Company</label>
+          <input type="text" [(ngModel)]="user.companyName" name="companyName" class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0" required>
+        </div>
+        
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Phone</label>
+          <input type="tel" [(ngModel)]="user.telp" name="telp" class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0" required>
+        </div>
+      </div>
+
+      <div class="space-y-2" *ngIf="!isEditMode">
+        <label class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Password</label>
+        <input type="password" [(ngModel)]="user.password" name="password" class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0" [required]="!isEditMode">
+      </div>
+
+      <div *ngIf="errorMsg" class="text-red-500 text-sm text-center bg-red-500/10 p-2 rounded border border-red-500/20">
+        {{ errorMsg }}
+      </div>
+
+      <div class="pt-4 flex justify-end gap-4">
+        <a routerLink="/dashboard" class="px-6 py-2.5 rounded-lg border border-white/10 text-gray-400 hover:bg-white/5 text-sm font-medium transition">Cancel</a>
+        <button 
+          type="submit" 
+          [disabled]="isLoading"
+          class="px-6 py-2.5 rounded-lg btn-primary text-sm font-medium shadow-lg disabled:opacity-50"
+        >
+          {{ isLoading ? 'Saving...' : (isEditMode ? 'Update User' : 'Create User') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

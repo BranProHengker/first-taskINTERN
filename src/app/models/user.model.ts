@@ -31,15 +31,16 @@ export interface LoginResponse {
 // Based on x.json (Request endpoint)
 export interface Ticket {
   id: number;
-  requestId?: number;
+  requestId?: number; // Keeping for backward compat if needed, or map id to it
+  requestNo?: string;
   status?: string;
   note?: string;
   createDate?: string;
   createBy?: number;
-  // Additional fields inferred from GET /api/Request endpoints if typical
-  // Since the swagger defines "RequestLog" for updateStatus, 
-  // but GET /api/Request might return a list of requests with more info.
-  // We will add common fields for display, to be verified against actual API response.
-  subject?: string; // Hypothetical
-  description?: string; // Hypothetical
+  roleName?: string;
+  subject?: string; 
+  description?: string;
+  capture?: string;
+  latitude?: number;
+  longitude?: number;
 }

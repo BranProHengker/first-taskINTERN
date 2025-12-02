@@ -1,0 +1,142 @@
+<div class="h-full flex flex-col p-6 md:p-10 overflow-auto relative">
+  <!-- Decorative background blobs -->
+  <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+    <div class="absolute top-10 right-10 w-96 h-96 rounded-full blur-3xl opacity-5" style="background-color: var(--color-primary)"></div>
+    <div class="absolute bottom-10 left-10 w-96 h-96 bg-white/5 rounded-full blur-3xl opacity-5"></div>
+  </div>
+
+  <div class="relative z-10">
+      <!-- Header -->
+      <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+         <div class="flex items-center gap-4">
+            <a routerLink="/ticket-list" class="group p-2.5 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition shadow-lg">
+              <svg class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            </a>
+            <div>
+               <div class="flex items-center gap-2 text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">
+                  <span>Tickets</span>
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                  <span style="color: var(--color-primary)">{{ isEditMode ? 'Edit' : 'New' }}</span>
+               </div>
+               <h2 class="text-2xl font-bold text-white tracking-tight">{{ isEditMode ? 'Edit Ticket' : 'Create New Ticket' }}</h2>
+            </div>
+         </div>
+      </div>
+
+      <!-- Form Card -->
+      <div class="glass-panel rounded-2xl shadow-2xl overflow-hidden max-w-3xl mx-auto">
+         <!-- Header -->
+         <div class="p-8 border-b border-white/5 bg-white/0.02">
+            <p class="text-sm text-gray-400">Fill in the details below to {{ isEditMode ? 'update the' : 'submit a new' }} support request.</p>
+         </div>
+
+         <!-- Body -->
+         <div class="p-8">
+            <form (ngSubmit)="onSubmit()" class="space-y-6">
+               <!-- Subject -->
+               <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-500 tracking-wider uppercase ml-1">Subject</label>
+                  <input 
+                     type="text" 
+                     [(ngModel)]="ticket.subject" 
+                     name="subject" 
+                     class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:ring-0 transition outline-none input-field"
+                     placeholder="Brief summary of the issue..." 
+                     style="--focus-border-color: var(--color-primary)"
+                  >
+               </div>
+
+               <!-- Description -->
+               <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-500 tracking-wider uppercase ml-1">Description / Note</label>
+                  <textarea 
+                     [(ngModel)]="ticket.note" 
+                     name="note" 
+                     rows="6" 
+                     class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:ring-0 transition outline-none resize-none input-field"
+                     style="--focus-border-color: var(--color-primary)"
+                     placeholder="Detailed description of the problem..." 
+                     required
+                  ></textarea>
+               </div>
+
+               <!-- Status (Edit Only) -->
+               <div class="space-y-2" *ngIf="isEditMode">
+                  <label class="text-xs font-bold text-gray-500 tracking-wider uppercase ml-1">Status</label>
+                  <div class="relative">
+                     <select 
+                        [(ngModel)]="ticket.status" 
+                        name="status" 
+                        class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:ring-0 transition outline-none appearance-none input-field"
+                        style="--focus-border-color: var(--color-primary)"
+                     >
+                        <option value="Open" class="bg-[#1E1E2E]">Open</option>
+                        <option value="In Progress" class="bg-[#1E1E2E]">In Progress</option>
+                        <option value="Reject" class="bg-[#1E1E2E]">Reject</option>
+                        <option value="Closed" class="bg-[#1E1E2E]">Closed</option>
+                     </select>
+                     <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                     </div>
+                  </div>
+               </div>
+
+               <!-- Capture / Attachment -->
+               <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-500 tracking-wider uppercase ml-1">Attachment / Capture</label>
+                  
+                  <div class="border-2 border-dashed border-white/10 rounded-xl bg-white/0.02 p-6 flex flex-col items-center justify-center gap-4 transition hover:border-white/20 hover:bg-white/5 group cursor-pointer" (click)="hiddenFileInput.nativeElement.click()">
+                     
+                     <!-- Preview -->
+                     <div *ngIf="imagePreview" class="relative w-full max-w-sm rounded-lg overflow-hidden border border-white/10" (click)="$event.stopPropagation()">
+                        <img [src]="imagePreview" class="w-full h-48 object-cover bg-black/40">
+                        <button type="button" (click)="removeFile()" class="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-red-500 transition">
+                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                     </div>
+
+                     <!-- Upload Area -->
+                     <div *ngIf="!imagePreview" class="text-center w-full pointer-events-none">
+                        <input 
+                           type="file" 
+                           #hiddenFileInput 
+                           (change)="onFileSelected($event)" 
+                           accept="image/*" 
+                           capture="environment" 
+                           class="hidden"
+                        >
+                        <div class="flex flex-col items-center gap-2">
+                           <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-white transition" style="color: var(--color-primary)">
+                              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                           </div>
+                           <p class="text-sm text-gray-400 font-medium group-hover:text-gray-300">Click to upload or take a photo</p>
+                           <p class="text-xs text-gray-600">Supports JPG, PNG (Max 5MB)</p>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               <!-- Error Message -->
+               <div *ngIf="errorMsg" class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400">
+                  <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <span class="text-sm">{{ errorMsg }}</span>
+               </div>
+
+               <!-- Action Buttons -->
+               <div class="pt-6 border-t border-white/5 flex justify-end gap-4">
+                  <a routerLink="/ticket-list" class="px-6 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:bg-white/5 hover:text-white text-sm font-medium transition">Cancel</a>
+                  <button 
+                     type="submit" 
+                     [disabled]="isLoading"
+                     class="px-8 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95 flex items-center gap-2"
+                     style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 rgba(215, 35, 35, 0.39)"
+                  >
+                     <svg *ngIf="isLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                     {{ isLoading ? 'Saving...' : (isEditMode ? 'Update Ticket' : 'Submit Ticket') }}
+                  </button>
+               </div>
+            </form>
+         </div>
+      </div>
+  </div>
+</div>
