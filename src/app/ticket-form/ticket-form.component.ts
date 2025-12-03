@@ -18,8 +18,17 @@ export class TicketFormComponent implements OnInit {
   ticket: any = {
     status: 'Open',
     note: '',
-    subject: ''
+    equipmentId: null,
+    modelName: '',
+    latitude: 0.0,
+    longitude: 0.0,
+    description: '',
+    details: []
   };
+  equipments: any[] = [];
+  services: any[] = [];
+  selectedServiceIds: number[] = [];
+  
   isEditMode = false;
   isLoading = false;
   errorMsg = '';
@@ -32,10 +41,46 @@ export class TicketFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   ngOnInit() {
+    this.loadEquipments();
+    this.loadServices();
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;
       this.loadRequest(Number(id));
+    }
+  }
+
+  loadEquipments() {
+    this.requestService.getEquipments().subscribe({
+      next: (data) => {
+        this.equipments = Array.isArray(data) ? data : (data as any).content || [];
+      },
+      error: (err) => console.error('Failed to load equipments', err)
+    });
+  }
+
+  loadServices() {
+    this.requestService.getServices().subscribe({
+      next: (data) => {
+        this.services = Array.isArray(data) ? data : (data as any).content || [];
+      },
+      error: (err) => console.error('Failed to load services', err)
+    });
+  }
+
+  onEquipmentChange() {
+    const selected = this.equipments.find(e => e.id == this.ticket.equipmentId);
+    if (selected) {
+      this.ticket.modelName = selected.modelName;
+    }
+  }
+
+  onServiceChange(event: Event, serviceId: number) {
+    const checkbox = event.target as HTMLInputElement;
+    if (checkbox.checked) {
+      this.selectedServiceIds.push(serviceId);
+    } else {
+      this.selectedServiceIds = this.selectedServiceIds.filter(id => id !== serviceId);
     }
   }
 
@@ -80,6 +125,13 @@ export class TicketFormComponent implements OnInit {
     this.isLoading = true;
     this.errorMsg = '';
 
+    // Validation
+    if (!this.ticket.equipmentId) {
+      this.errorMsg = 'Please select an equipment.';
+      this.isLoading = false;
+      return;
+    }
+
     if (this.isEditMode) {
       this.requestService.updateRequest(this.ticket).subscribe({
         next: () => {
@@ -93,6 +145,7 @@ export class TicketFormComponent implements OnInit {
         }
       });
     } else {
+      // Create new ticket - API: POST /api/Request
       const formData = new FormData();
       
       let statusId = 1;
@@ -105,33 +158,38 @@ export class TicketFormComponent implements OnInit {
       }
 
       const payload = {
-        requestNo: this.ticket.subject,
-        note: this.ticket.note,
-        status: statusId
+        equipmentId: this.ticket.equipmentId,
+        modelName: this.ticket.modelName,
+        latitude: this.ticket.latitude || 0.0,
+        longitude: this.ticket.longitude || 0.0,
+        description: this.ticket.note,
+        status: statusId.toString(),
+        details: this.selectedServiceIds.map(id => ({ ServiceId: id }))
       };
 
+      // API expects 'param' field with JSON string
       formData.append('param', JSON.stringify(payload));
-
-      if (this.ticket.subject) {
-        formData.append('Name', this.ticket.subject);
-      }
 
       if (this.selectedFile) {
         formData.append('file', this.selectedFile);
+        formData.append('Name', 'file');
         formData.append('FileName', this.selectedFile.name);
         formData.append('ContentType', this.selectedFile.type);
         formData.append('Length', this.selectedFile.size.toString());
+        formData.append('ContentDisposition', `form-data; name="file"; filename="${this.selectedFile.name}"`);
+        formData.append('Headers', '{}');
       }
 
       this.requestService.createRequest(formData).subscribe({
         next: () => {
           this.isLoading = false;
+          console.log('Ticket created successfully via POST /api/Request');
           this.router.navigate(['/ticket-list']);
         },
         error: (err) => {
-          console.error(err);
+          console.error('Create ticket failed:', err);
           this.isLoading = false;
-          this.errorMsg = 'Failed to create ticket.';
+          this.errorMsg = 'Failed to create ticket. Please try again.';
         }
       });
     }

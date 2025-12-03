@@ -11,6 +11,6 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     // provideClientHydration(withEventReplay()), // Disabled strict hydration as requested
-    provideHttpClient(withInterceptors([authInterceptor]))
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor]))
   ]
 };

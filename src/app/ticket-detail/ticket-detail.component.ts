@@ -1,13 +1,15 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { RequestService } from '../services/request.service';
 import { Ticket } from '../models/user.model';
 
 @Component({
   selector: 'app-ticket-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './ticket-detail.component.html',
   styleUrl: './ticket-detail.component.css'
 })
@@ -16,11 +18,13 @@ export class TicketDetailComponent implements OnInit {
   isLoading = true;
   private route = inject(ActivatedRoute);
   private requestService = inject(RequestService);
+  private sanitizer = inject(DomSanitizer);
 
-  get captureImageUrl(): string | null {
-    if (!this.request?.capture) return null;
-    return this.requestService.getCaptureImage(this.request.capture);
-  }
+  imageBlobUrl: string | null = null;
+  isStatusDropdownOpen = false;
+  isAddNoteOpen = false;
+  newNote = '';
+  isSubmittingNote = false;
 
   ngOnInit() {
     // Get ID from params, support both string and number formats if needed
@@ -38,17 +42,85 @@ export class TicketDetailComponent implements OnInit {
   loadRequest(id: number) {
     this.requestService.getRequestById(id).subscribe({
       next: (data) => {
+        console.log('Request Data:', data);
         this.request = data || null;
         this.isLoading = false;
-        if (!this.request) {
-           // handle not found
-           console.warn('Request not found');
+        if (this.request?.capture) {
+           console.log('Loading image for:', this.request.capture);
+           this.loadImage(this.request.capture);
         }
       },
       error: (err) => {
         console.error(err);
         this.isLoading = false;
-        // Removed fallback mock
+      }
+    });
+  }
+
+  loadImage(filename: string) {
+    this.requestService.getCaptureImage(filename).subscribe({
+      next: (blob) => {
+        this.imageBlobUrl = URL.createObjectURL(blob);
+      },
+      error: (err) => {
+        console.error('Failed to load image blob', err);
+      }
+    });
+  }
+
+  updateStatus(status: string) {
+    this.isStatusDropdownOpen = false; // Close dropdown on selection
+    if (!this.request?.id) return;
+    
+    let statusId = 1;
+    switch(status) {
+       case 'Open': statusId = 1; break;
+       case 'In Progress': statusId = 2; break;
+       case 'Reject': statusId = 3; break;
+       case 'Closed': statusId = 4; break;
+    }
+
+    // Optimistic update
+    const oldStatus = this.request.status;
+    this.request.status = status;
+
+    this.requestService.updateTicketStatus(this.request.id, statusId).subscribe({
+      next: () => {
+        console.log('Status updated successfully');
+      },
+      error: (err) => {
+        console.error('Failed to update status', err);
+        // Revert on error
+        if (this.request) this.request.status = oldStatus;
+      }
+    });
+  }
+
+  submitNote() {
+    if (!this.request?.id || !this.newNote.trim()) return;
+    
+    this.isSubmittingNote = true;
+    
+    // Map current status to numeric string as expected by backend
+    let statusId = '1';
+    switch(this.request.status) {
+       case 'Open': statusId = '1'; break;
+       case 'In Progress': statusId = '2'; break;
+       case 'Reject': statusId = '3'; break;
+       case 'Closed': statusId = '4'; break;
+    }
+
+    this.requestService.addTicketNote(this.request.id, this.newNote, statusId).subscribe({
+      next: () => {
+        console.log('Note added successfully');
+        this.isSubmittingNote = false;
+        this.isAddNoteOpen = false;
+        this.newNote = '';
+        // Ideally reload history or append to local history if we had one
+      },
+      error: (err) => {
+        console.error('Failed to add note', err);
+        this.isSubmittingNote = false;
       }
     });
   }

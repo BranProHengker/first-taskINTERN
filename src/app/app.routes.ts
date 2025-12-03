@@ -8,6 +8,10 @@ import { LayoutComponent } from './components/layout.component';
 import { authGuard } from './auth.guard';
 import { UserFormComponent } from './user-form/user-form.component';
 import { TicketFormComponent } from './ticket-form/ticket-form.component';
+import { EquipmentListComponent } from './equipment-list/equipment-list.component';
+import { EquipmentFormComponent } from './equipment-form/equipment-form.component';
+import { RoleListComponent } from './role-list/role-list';
+import { RoleFormComponent } from './role-form/role-form';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -23,7 +27,14 @@ export const routes: Routes = [
       { path: 'users/:id/edit', component: UserFormComponent },
       { path: 'ticket-list', component: TicketListComponent },
       { path: 'tickets/new', component: TicketFormComponent },
-      { path: 'tickets/:id', component: TicketDetailComponent }
+      { path: 'tickets/:id', component: TicketDetailComponent },
+      { path: 'tickets/:id/edit', component: TicketFormComponent },
+      { path: 'equipments', component: EquipmentListComponent },
+      { path: 'equipments/new', component: EquipmentFormComponent },
+      { path: 'equipments/:id/edit', component: EquipmentFormComponent },
+      { path: 'roles', component: RoleListComponent },
+      { path: 'roles/new', component: RoleFormComponent },
+      { path: 'roles/:id/edit', component: RoleFormComponent }
     ]
   },
   { path: '**', redirectTo: '/login' }

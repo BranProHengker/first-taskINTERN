@@ -101,9 +101,23 @@
 
                <!-- Bagian Capture -->
                <div class="mt-8" *ngIf="request.capture">
-                  <h3 class="text-xl font-bold text-white mb-2"> Capture</h3>
-                  <div>
-                     <img class="max-w-sm border border-white/10 rounded-lg" [src]="captureImageUrl" alt="Capture">
+                  <h3 class="text-xl font-bold text-white mb-2">Capture</h3>
+                  <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                     <!-- Loading State -->
+                     <div *ngIf="!imageBlobUrl" class="flex items-center gap-2 text-gray-400 mb-2">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-sm">Loading capture...</span>
+                     </div>
+
+                     <!-- Image -->
+                     <img *ngIf="imageBlobUrl" class="max-w-full h-auto rounded-lg shadow-lg" [src]="imageBlobUrl" alt="Request Capture">
+                     
+                     <div class="mt-2 text-xs text-gray-500 break-all">
+                        Filename: {{ request.capture }}
+                     </div>
                   </div>
                </div>
 
@@ -179,18 +193,61 @@
           <div class="glass-panel rounded-2xl shadow-xl p-6">
             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Actions</h4>
             <div class="space-y-3">
-              <button class="w-full py-2.5 px-4 rounded-lg text-white text-sm font-semibold shadow-lg flex items-center justify-center gap-2 transition transform hover:-translate-y-0.5" style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 rgba(215, 35, 35, 0.39)">
-                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                 Update Status
-              </button>
-              <button class="w-full py-2.5 px-4 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition border border-white/5 flex items-center justify-center gap-2">
+              
+              <!-- Status Dropdown -->
+              <div class="relative">
+                 <button 
+                  (click)="isStatusDropdownOpen = !isStatusDropdownOpen"
+                  class="w-full py-2.5 px-4 rounded-lg text-white text-sm font-semibold shadow-lg flex items-center justify-center gap-2 transition transform hover:-translate-y-0.5" style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 rgba(215, 35, 35, 0.39)">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Change Status
+                    <svg class="w-4 h-4 ml-auto transition-transform duration-200" [class.rotate-180]="isStatusDropdownOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                 </button>
+                 
+                 <!-- Dropdown Menu -->
+                 <div *ngIf="isStatusDropdownOpen" class="absolute left-0 right-0 top-full mt-2 rounded-xl bg-[#1E1E2E] border border-white/10 shadow-2xl overflow-hidden z-50">
+                    <button (click)="updateStatus('Open')" class="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition flex items-center gap-2">
+                       <span class="w-2 h-2 rounded-full bg-green-400"></span> Open
+                    </button>
+                    <button (click)="updateStatus('In Progress')" class="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition flex items-center gap-2">
+                       <span class="w-2 h-2 rounded-full bg-yellow-400"></span> In Progress
+                    </button>
+                    <button (click)="updateStatus('Reject')" class="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition flex items-center gap-2">
+                       <span class="w-2 h-2 rounded-full bg-red-400"></span> Reject
+                    </button>
+                    <button (click)="updateStatus('Closed')" class="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition flex items-center gap-2">
+                       <span class="w-2 h-2 rounded-full bg-gray-400"></span> Closed
+                    </button>
+                 </div>
+              </div>
+
+              <button 
+                 (click)="isAddNoteOpen = !isAddNoteOpen"
+                 class="w-full py-2.5 px-4 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition border border-white/5 flex items-center justify-center gap-2">
                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                  Add Note
               </button>
-              <button class="w-full py-2.5 px-4 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium transition border border-red-500/10 flex items-center justify-center gap-2">
-                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                 Close request
-              </button>
+
+              <!-- Add Note Form (Expandable) -->
+              <div *ngIf="isAddNoteOpen" class="pt-3 animate-fade-in-down">
+                 <textarea 
+                    [(ngModel)]="newNote" 
+                    rows="3" 
+                    class="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-[var(--color-primary)] placeholder-gray-600 resize-none"
+                    placeholder="Type your note here..."
+                 ></textarea>
+                 <div class="flex gap-2 mt-2 justify-end">
+                    <button (click)="isAddNoteOpen = false" class="px-3 py-1.5 rounded-lg text-xs text-gray-400 hover:bg-white/5 hover:text-white transition">Cancel</button>
+                    <button 
+                       (click)="submitNote()" 
+                       [disabled]="!newNote.trim() || isSubmittingNote"
+                       class="px-3 py-1.5 rounded-lg text-xs text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg"
+                       style="background-color: var(--color-primary)"
+                    >
+                       {{ isSubmittingNote ? 'Saving...' : 'Save Note' }}
+                    </button>
+                 </div>
+              </div>
             </div>
           </div>
         </div>

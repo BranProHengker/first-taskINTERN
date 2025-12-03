@@ -104,4 +104,19 @@ export class TicketListComponent implements OnInit {
       default: return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
     }
   }
+
+  deleteTicket(id: number) {
+    if (confirm('Are you sure you want to delete this ticket?')) {
+      this.requestService.deleteRequest(id).subscribe({
+        next: () => {
+          this.tickets = this.tickets.filter(t => t.id !== id);
+          this.filterTickets();
+        },
+        error: (err) => {
+          console.error('Failed to delete ticket', err);
+          alert('Failed to delete ticket. Please try again.');
+        }
+      });
+    }
+  }
 }

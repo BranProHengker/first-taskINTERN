@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpBackend } from '@angular/common/http';
 import { Observable, map, of } from 'rxjs';
 import { Ticket } from '../models/user.model';
 
@@ -12,8 +12,12 @@ export class RequestService {
   
   // Cache to support getById if endpoint doesn't support it
   private requestsCache: Ticket[] = [];
+  
+  private httpNoInterceptor: HttpClient;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, handler: HttpBackend) {
+    this.httpNoInterceptor = new HttpClient(handler);
+  }
 
   getRequests(): Observable<Ticket[]> {
     return this.http.get<any[]>(this.baseUrl).pipe(
@@ -49,14 +53,19 @@ export class RequestService {
             description: item.description,
             createBy: item.createBy,
             roleName: item.roleName,
-            capture: item.capture,
+            capture: item.capture || item.Capture, // Handle possible uppercase
             latitude: item.latitude,
             longitude: item.longitude
           };
         });
         
         this.requestsCache = tickets;
-        return tickets;
+        // Sort by date descending (newest first)
+        return tickets.sort((a: Ticket, b: Ticket) => {
+          const dateA = a.createDate ? new Date(a.createDate).getTime() : 0;
+          const dateB = b.createDate ? new Date(b.createDate).getTime() : 0;
+          return dateB - dateA;
+        });
       })
     );
   }
@@ -81,18 +90,46 @@ export class RequestService {
     return this.http.get(`http://192.168.5.200:60776/api/Request/history/${requestId}`);
   }
 
-  getCaptureImage(fileName: string): string {
-    if (!fileName) return '';
-    if (fileName.startsWith('http') || fileName.startsWith('assets')) return fileName;
-    
-    // Normalize slashes (replace backslashes with forward slashes)
-    let cleanPath = fileName.replace(/\\/g, '/');
-    
-    // Extract just the filename if it contains paths
-    // Assuming the server exposes files at the root URL
-    cleanPath = cleanPath.split('/').pop() || cleanPath;
-    
-    return `http://192.168.5.200:60776/${cleanPath}`;
+  getEquipments(): Observable<any[]> {
+    return this.http.get<any[]>('http://192.168.5.200:60776/api/Equipment');
+  }
+
+  getEquipmentById(id: number): Observable<any> {
+    // Fallback to list filtering if direct endpoint is unreliable
+    return this.getEquipments().pipe(
+      map(equipments => equipments.find(e => e.id == id))
+    );
+  }
+
+  createEquipment(equipment: any): Observable<any> {
+    return this.http.post('http://192.168.5.200:60776/api/Equipment', equipment);
+  }
+
+  updateEquipment(equipment: any): Observable<any> {
+    return this.http.put('http://192.168.5.200:60776/api/Equipment', equipment);
+  }
+
+  deleteEquipment(id: number): Observable<any> {
+    return this.http.delete(`http://192.168.5.200:60776/api/Equipment/${id}`);
+  }
+
+  getServices(): Observable<any[]> {
+    return this.http.get<any[]>('http://192.168.5.200:60776/api/Service?row=82').pipe(
+      map(response => {
+        const rawData = Array.isArray(response) ? response : (response as any).content || [];
+        return rawData.map((item: any) => ({
+          id: item.id,
+          serviceName: item.service || item.serviceName // Handle 'service' from API, fallback to 'serviceName' if exists
+        }));
+      })
+    );
+  }
+
+  getCaptureImage(filename: string): Observable<Blob> {
+    // Use the raw filename directly as requested
+    return this.http.get(`${this.baseUrl}/GetFile/${filename}`, {
+      responseType: 'blob',
+    });
   }
 
   createRequest(ticketData: any): Observable<any> {
@@ -111,19 +148,67 @@ export class RequestService {
   }
 
   updateRequest(ticket: any): Observable<any> {
-    // x.json: PUT /api/Equipment (Wait, Request PUT?)
-    // There is NO PUT /api/Request in the paths I saw?
-    // Ah, there is POST /api/Request/status and POST /api/Request/updateStatus
-    // But standard Update might be missing or I missed it.
-    // Let's assume PUT /api/Request works or we use updateStatus.
-    // Checking x.json again... /api/Request has GET, POST. /api/Request/{id} has GET, DELETE.
-    // No PUT /api/Request found in the snippet provided (only Equipment/Role/User/GeoTag have PUT).
-    // So maybe we can't edit ticket details, only status?
-    // I will assume PUT works for now or use a placeholder.
     return this.http.put(`http://192.168.5.200:60776/api/Request`, ticket);
+  }
+
+  updateTicketStatus(id: number, status: number): Observable<any> {
+    // x.json: POST /api/Request/updateStatus
+    // Schema: RequestLog { id, requestId, status, note, createDate, createBy }
+    const payload = {
+      requestId: id,
+      status: status.toString(),
+      createDate: new Date().toISOString(),
+      // Add other fields if required by backend validation, even if null
+      note: '', 
+      createBy: 0 // Backend likely overwrites or ignores this
+    };
+    return this.http.post(`${this.baseUrl}/updateStatus`, payload);
+  }
+
+  addTicketNote(id: number, note: string, status: string): Observable<any> {
+    // Assuming Add Note also uses updateStatus endpoint but with a note content
+    // Or if there is a specific AddNote, but I didn't see one. 
+    // Using updateStatus as it has a 'note' field in RequestLog schema.
+    // We need to preserve current status or allow changing it.
+    
+    // Map status string to ID if needed, or just pass what we have if backend accepts string (schema says string? No, schema says status is string in RequestLog but integer in ReadParam... let's check schema again)
+    // RequestLog schema: status: string (nullable). 
+    // Ticket schema: status: string.
+    // But updateTicketStatus uses status.toString().
+    
+    const payload = {
+      requestId: id,
+      status: status, // Send current status string (or ID if backend requires conversion, but previously we sent "1", "2" etc strings)
+      note: note,
+      createDate: new Date().toISOString(),
+      createBy: 0
+    };
+    return this.http.post(`${this.baseUrl}/updateStatus`, payload);
   }
 
   deleteRequest(id: number): Observable<any> {
     return this.http.delete(`http://192.168.5.200:60776/api/Request/${id}`);
+  }
+
+  // --- Role CRUD ---
+
+  getRoles(): Observable<any[]> {
+    return this.http.get<any[]>('http://192.168.5.200:60776/api/Role');
+  }
+
+  getRoleById(id: number): Observable<any> {
+    return this.http.get<any>(`http://192.168.5.200:60776/api/Role/${id}`);
+  }
+
+  createRole(role: any): Observable<any> {
+    return this.http.post('http://192.168.5.200:60776/api/Role', role);
+  }
+
+  updateRole(role: any): Observable<any> {
+    return this.http.put('http://192.168.5.200:60776/api/Role', role);
+  }
+
+  deleteRole(id: number): Observable<any> {
+    return this.http.delete(`http://192.168.5.200:60776/api/Role/${id}`);
   }
 }
