@@ -13,7 +13,8 @@ import { RequestService } from '../services/request.service';
 })
 export class RoleFormComponent implements OnInit {
   role: any = {
-    roleName: ''
+    roleName: '',
+    roleAccess: []
   };
   isEditMode = false;
   isLoading = false;
@@ -36,6 +37,10 @@ export class RoleFormComponent implements OnInit {
     this.requestService.getRoleById(id).subscribe({
       next: (data) => {
         this.role = data;
+        // Ensure roleAccess is initialized
+        if (!this.role.roleAccess) {
+          this.role.roleAccess = [];
+        }
         this.isLoading = false;
       },
       error: (err) => {
@@ -44,6 +49,19 @@ export class RoleFormComponent implements OnInit {
         this.errorMsg = 'Failed to load role details.';
       }
     });
+  }
+
+  addAccess() {
+    // Basic structure based on user input
+    this.role.roleAccess.push({
+      menuId: 0,
+      akses: 0,
+      roleId: this.role.id || 0 // Will be 0 for new role, handled by backend
+    });
+  }
+
+  removeAccess(index: number) {
+    this.role.roleAccess.splice(index, 1);
   }
 
   onSubmit() {
@@ -56,8 +74,19 @@ export class RoleFormComponent implements OnInit {
       return;
     }
 
+    // Prepare payload matching the provided JSON structure
+    const payload = {
+      ...this.role,
+      roleAccess: this.role.roleAccess.map((access: any) => ({
+        id: access.id || 0, // Default to 0 for new entries
+        roleId: this.role.id || 0,
+        menuId: Number(access.menuId),
+        akses: Number(access.akses)
+      }))
+    };
+
     if (this.isEditMode) {
-      this.requestService.updateRole(this.role).subscribe({
+      this.requestService.updateRole(payload).subscribe({
         next: () => {
           this.router.navigate(['/roles']);
         },
@@ -68,7 +97,7 @@ export class RoleFormComponent implements OnInit {
         }
       });
     } else {
-      this.requestService.createRole(this.role).subscribe({
+      this.requestService.createRole(payload).subscribe({
         next: () => {
           this.router.navigate(['/roles']);
         },
