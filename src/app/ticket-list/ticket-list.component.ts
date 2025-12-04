@@ -17,6 +17,7 @@ export class TicketListComponent implements OnInit {
   isLoading = true;
   activeTab = 'All';
   searchTerm = '';
+  errorMsg = '';
 
   constructor(private requestService: RequestService) {}
 
@@ -25,6 +26,8 @@ export class TicketListComponent implements OnInit {
   }
 
   loadRequests() {
+    this.isLoading = true;
+    this.errorMsg = '';
     this.requestService.getRequests().subscribe({
       next: (data) => {
         this.tickets = data;
@@ -34,8 +37,7 @@ export class TicketListComponent implements OnInit {
       error: (err) => {
         console.error(err);
         this.isLoading = false;
-        // Remove fallback data to respect user request "bukan data dummy"
-        // Or keep it empty to show "No tickets found" which is more accurate if API fails
+        this.errorMsg = 'Failed to load tickets. ' + (err.message || 'Server error');
         this.tickets = [];
         this.filterTickets();
       }

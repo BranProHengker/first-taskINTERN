@@ -15,14 +15,13 @@ export class RegisterComponent {
   user = {
     fullName: '',
     emailAddress: '',
-    password: '',
     companyName: '',
     telp: '',
-    roleId: 0, // Default role
-    roleName: 'User' // Default role
+    password: ''
   };
-  isLoading = false;
   errorMsg = '';
+  isLoading = false;
+  showPassword = false;
 
   constructor(private router: Router, private authService: AuthService) {}
 

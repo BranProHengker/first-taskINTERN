@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { RequestService } from '../services/request.service';
+import { RoleService } from '../services/role.service';
 
 @Component({
   selector: 'app-role-form',
@@ -20,7 +20,7 @@ export class RoleFormComponent implements OnInit {
   isLoading = false;
   errorMsg = '';
   
-  private requestService = inject(RequestService);
+  private roleService = inject(RoleService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -34,7 +34,7 @@ export class RoleFormComponent implements OnInit {
 
   loadRole(id: number) {
     this.isLoading = true;
-    this.requestService.getRoleById(id).subscribe({
+    this.roleService.getRoleById(id).subscribe({
       next: (data) => {
         this.role = data;
         // Ensure roleAccess is initialized
@@ -74,39 +74,31 @@ export class RoleFormComponent implements OnInit {
       return;
     }
 
-    // Prepare payload matching the provided JSON structure
     const payload = {
       ...this.role,
       roleAccess: this.role.roleAccess.map((access: any) => ({
-        id: access.id || 0, // Default to 0 for new entries
+        id: access.id || 0,
         roleId: this.role.id || 0,
         menuId: Number(access.menuId),
         akses: Number(access.akses)
       }))
     };
 
+    const successHandler = {
+      next: () => {
+        this.router.navigate(['/roles']);
+      },
+      error: (err: any) => {
+        console.error('Create/Update error:', err);
+        this.isLoading = false;
+        this.errorMsg = 'Failed to save role. ' + (err.message || '');
+      }
+    };
+
     if (this.isEditMode) {
-      this.requestService.updateRole(payload).subscribe({
-        next: () => {
-          this.router.navigate(['/roles']);
-        },
-        error: (err) => {
-          console.error('Failed to update role', err);
-          this.isLoading = false;
-          this.errorMsg = 'Failed to update role.';
-        }
-      });
+      this.roleService.updateRole(payload).subscribe(successHandler);
     } else {
-      this.requestService.createRole(payload).subscribe({
-        next: () => {
-          this.router.navigate(['/roles']);
-        },
-        error: (err) => {
-          console.error('Failed to create role', err);
-          this.isLoading = false;
-          this.errorMsg = 'Failed to create role.';
-        }
-      });
+      this.roleService.createRole(payload).subscribe(successHandler);
     }
   }
 }

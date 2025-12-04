@@ -1,5 +1,5 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, Input, Output, EventEmitter, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
@@ -8,13 +8,27 @@ import { AuthService } from '../services/auth.service';
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
-    <aside class="w-64 bg-[#3A4750] border-r border-white/5 hidden md:flex flex-col h-full">
-      <div class="p-6 flex items-center gap-3">
-        <div class="w-8 h-8 rounded rotate-45 shadow" style="background-color: var(--color-primary)"></div>
-        <span class="text-xl font-bold tracking-wider text-white">DASHBOARD</span>
+    <aside 
+      [class.translate-x-0]="isOpen" 
+      [class.-translate-x-full]="!isOpen"
+      [class.md:w-64]="isOpen"
+      [class.md:w-0]="!isOpen"
+      [class.md:translate-x-0]="true"
+      class="fixed inset-y-0 left-0 z-40 bg-[#3A4750] border-r border-white/5 flex flex-col h-full transform transition-all duration-300 ease-in-out md:relative shadow-2xl md:shadow-none overflow-hidden"
+    >
+      <div class="p-6 flex items-center justify-between gap-3 min-w-[16rem]">
+        <div class="flex items-center gap-3">
+           <!-- Replaced div placeholder with logo image -->
+           <img src="/Main-logo.png" alt="Logo" class="w-8 h-8 object-contain drop-shadow-md">
+           <span class="text-xl font-bold tracking-wider text-white">DASHBOARD</span>
+        </div>
+        <!-- Close button for mobile -->
+        <button (click)="closeSidebar.emit()" class="md:hidden text-gray-400 hover:text-white">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
       </div>
       
-      <nav class="flex-1 px-4 py-4 space-y-2">
+      <nav class="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
         <a routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 text-gray-400 hover:bg-white/5 hover:text-white border border-transparent">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
           <span class="font-medium">Users</span>
@@ -33,11 +47,14 @@ import { AuthService } from '../services/auth.service';
         </a>
       </nav>
 
-      <div class="p-4">
+      <div class="p-4 border-t border-white/5">
         <div class="p-4 rounded-xl bg-[#303841] border border-white/5">
           <p class="text-xs text-gray-400 mb-1">Logged in as</p>
           <p class="text-sm font-bold text-white truncate">{{ currentUser?.name || 'User' }}</p>
-          <button (click)="logout()" class="mt-2 text-xs text-red-400 hover:text-red-300 cursor-pointer">Logout</button>
+          <button (click)="logout()" class="mt-2 text-xs text-red-400 hover:text-red-300 cursor-pointer flex items-center gap-1">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            Logout
+          </button>
         </div>
       </div>
     </aside>
@@ -51,10 +68,20 @@ import { AuthService } from '../services/auth.service';
   `]
 })
 export class SidebarComponent {
+  @Input() isOpen = false;
+  @Output() closeSidebar = new EventEmitter<void>();
+  
+  private platformId = inject(PLATFORM_ID);
   authService = inject(AuthService);
   currentUser = this.authService.getCurrentUser();
 
   logout() {
     this.authService.logout();
   }
+
+  // Removed onLinkClick to strictly prevent auto-closing
+  // The sidebar will now ONLY close via:
+  // 1. Burger menu (toggle)
+  // 2. Close button (mobile)
+  // 3. Overlay click (mobile)
 }

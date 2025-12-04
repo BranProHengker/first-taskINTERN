@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { RequestService } from '../services/request.service';
+import { RoleService } from '../services/role.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-role-list',
@@ -13,7 +14,7 @@ import { RequestService } from '../services/request.service';
 export class RoleListComponent implements OnInit {
   roles: any[] = [];
   isLoading = true;
-  private requestService = inject(RequestService);
+  private roleService = inject(RoleService);
 
   ngOnInit() {
     this.loadRoles();
@@ -21,9 +22,9 @@ export class RoleListComponent implements OnInit {
 
   loadRoles() {
     this.isLoading = true;
-    this.requestService.getRoles().subscribe({
+    this.roleService.getRoles().subscribe({
       next: (data) => {
-        this.roles = Array.isArray(data) ? data : (data as any).content || [];
+        this.roles = data;
         this.isLoading = false;
       },
       error: (err) => {
@@ -35,11 +36,28 @@ export class RoleListComponent implements OnInit {
 
   deleteRole(id: number) {
     if (confirm('Are you sure you want to delete this role?')) {
-      this.requestService.deleteRole(id).subscribe({
+      console.log('[RoleList] Attempting to delete role with id:', id);
+      this.roleService.deleteRole(id).subscribe({
         next: () => {
+          console.log('Role deleted successfully');
           this.loadRoles();
         },
-        error: (err) => console.error('Failed to delete role', err)
+        error: (err: any) => {
+          console.error('Delete error:', err);
+          console.error('Error status:', err.status);
+          console.error('Error body:', err.error);
+          
+          // Log detail error
+          if (err.status === 400) {
+            alert('Bad Request - Backend rejected delete. Check if role is in use or has dependencies.');
+          } else if (err.status === 401) {
+            alert('Unauthorized - Please login again');
+          } else if (err.status === 403) {
+            alert('Forbidden - You do not have permission to delete');
+          } else {
+            alert('Failed to delete role: ' + (err.message || 'Unknown error'));
+          }
+        }
       });
     }
   }

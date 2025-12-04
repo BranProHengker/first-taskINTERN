@@ -47,7 +47,15 @@
                  </tr>
                </thead>
                <tbody class="text-sm divide-y divide-white/5">
-                 <tr *ngIf="isLoading">
+                 <tr *ngIf="errorMsg">
+                    <td colspan="6" class="p-10 text-center">
+                       <div class="flex flex-col items-center gap-3">
+                          <div class="text-red-400 font-medium">{{ errorMsg }}</div>
+                          <button (click)="loadEquipments()" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm text-white transition">Retry</button>
+                       </div>
+                    </td>
+                 </tr>
+                 <tr *ngIf="isLoading && !errorMsg">
                    <td colspan="6" class="p-20 text-center text-gray-500">
                      <div class="flex flex-col items-center gap-4">
                        <div class="relative w-10 h-10">

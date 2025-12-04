@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { UserService } from '../services/user.service';
 import { User } from '../models/user.model';
 
 @Component({
@@ -16,14 +16,14 @@ export class DashboardComponent implements OnInit {
   filteredUsers: User[] = [];
   isLoading = true;
 
-  constructor(private authService: AuthService) {}
+  constructor(private userService: UserService) {}
 
   ngOnInit() {
     this.loadUsers();
   }
 
   loadUsers() {
-    this.authService.getUsers().subscribe({
+    this.userService.getUsers().subscribe({
       next: (data: any) => {
         // Handle possible response wrapper or direct array
         if (Array.isArray(data)) {
@@ -79,7 +79,7 @@ export class DashboardComponent implements OnInit {
 
   deleteUser(id: number) {
     if (confirm('Are you sure you want to delete this user?')) {
-      this.authService.deleteUser(id).subscribe({
+      this.userService.deleteUser(id).subscribe({
         next: () => {
           this.loadUsers(); // Reload list
         },

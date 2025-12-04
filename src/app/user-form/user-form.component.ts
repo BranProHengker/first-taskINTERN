@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { UserService } from '../services/user.service';
 import { User } from '../models/user.model';
 
 @Component({
@@ -26,7 +26,7 @@ export class UserFormComponent implements OnInit {
   isLoading = false;
   errorMsg = '';
 
-  private authService = inject(AuthService);
+  private userService = inject(UserService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -40,9 +40,8 @@ export class UserFormComponent implements OnInit {
 
   loadUser(id: number) {
     this.isLoading = true;
-    this.authService.getUsers().subscribe({
-      next: (users) => {
-        const found = users.find(u => u.id === id);
+    this.userService.getUserById(id).subscribe({
+      next: (found) => {
         if (found) {
           this.user = { ...found };
           // Clear password for edit mode security
@@ -63,8 +62,8 @@ export class UserFormComponent implements OnInit {
     this.errorMsg = '';
 
     const request = this.isEditMode 
-      ? this.authService.updateUser(this.user)
-      : this.authService.createUser(this.user);
+      ? this.userService.updateUser(this.user)
+      : this.userService.createUser(this.user);
 
     request.subscribe({
       next: () => {

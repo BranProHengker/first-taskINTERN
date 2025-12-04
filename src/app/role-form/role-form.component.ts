@@ -80,4 +80,17 @@ export class RoleFormComponent implements OnInit {
       });
     }
   }
+
+  // addAccess() {
+  //   if (!this.role.roleAccess) {
+  //     this.role.roleAccess = [];
+  //   }
+  //   this.role.roleAccess.push({ menuId: null, akses: null });
+  // }
+
+  // removeAccess(index: number) {
+  //   if (this.role.roleAccess) {
+  //     this.role.roleAccess.splice(index, 1);
+  //   }
+  // }
 }

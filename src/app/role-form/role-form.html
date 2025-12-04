@@ -48,49 +48,12 @@
                </div>
 
                <!-- Role Access Management -->
+               <!-- Removed as requested: "di role form tidak ada role permisions , coba hapus" -->
+               <!-- 
                <div class="space-y-4">
-                  <div class="flex justify-between items-center">
-                     <label class="text-xs font-bold text-gray-500 tracking-wider uppercase ml-1">Role Permissions</label>
-                     <button type="button" (click)="addAccess()" class="text-xs text-[var(--color-primary)] hover:text-white transition font-medium flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                        Add Permission
-                     </button>
-                  </div>
-                  
-                  <div class="space-y-3" *ngIf="role.roleAccess && role.roleAccess.length > 0">
-                     <div *ngFor="let access of role.roleAccess; let i = index" class="flex flex-col sm:flex-row gap-3 bg-white/5 p-4 rounded-xl border border-white/10">
-                        <div class="flex-1 space-y-1">
-                           <label class="text-[10px] text-gray-500 uppercase">Menu ID</label>
-                           <input 
-                              type="number" 
-                              [(ngModel)]="access.menuId" 
-                              [name]="'menuId-' + i" 
-                              class="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white focus:ring-0 transition outline-none input-field text-sm"
-                              placeholder="Menu ID"
-                           >
-                        </div>
-                        <div class="flex-1 space-y-1">
-                           <label class="text-[10px] text-gray-500 uppercase">Access Level</label>
-                           <input 
-                              type="number" 
-                              [(ngModel)]="access.akses" 
-                              [name]="'akses-' + i" 
-                              class="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white focus:ring-0 transition outline-none input-field text-sm"
-                              placeholder="Access Value"
-                           >
-                        </div>
-                        <div class="flex items-end">
-                           <button type="button" (click)="removeAccess(i)" class="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition border border-red-500/10 h-[38px] w-[38px] flex items-center justify-center">
-                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                           </button>
-                        </div>
-                     </div>
-                  </div>
-                  
-                  <div *ngIf="!role.roleAccess || role.roleAccess.length === 0" class="text-center p-6 border-2 border-dashed border-white/10 rounded-xl text-gray-500 text-sm">
-                     No permissions assigned. Click "Add Permission" to start.
-                  </div>
+                  ... (Role permissions code preserved in comments if needed later, or fully removed)
                </div>
+               -->
 
                <!-- Error Message -->
                <div *ngIf="errorMsg" class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400">

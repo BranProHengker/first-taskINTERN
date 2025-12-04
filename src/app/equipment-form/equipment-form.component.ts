@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { RequestService } from '../services/request.service';
+import { EquipmentService } from '../services/equipment.service';
 import { Equipment } from '../models/equipment.model';
 
 @Component({
@@ -23,7 +23,7 @@ export class EquipmentFormComponent implements OnInit {
   isLoading = false;
   errorMsg = '';
 
-  private requestService = inject(RequestService);
+  private equipmentService = inject(EquipmentService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -37,7 +37,7 @@ export class EquipmentFormComponent implements OnInit {
 
   loadEquipment(id: number) {
     this.isLoading = true;
-    this.requestService.getEquipmentById(id).subscribe({
+    this.equipmentService.getEquipmentById(id).subscribe({
       next: (data) => {
         this.equipment = data;
         this.isLoading = false;
@@ -55,7 +55,7 @@ export class EquipmentFormComponent implements OnInit {
     this.errorMsg = '';
 
     if (this.isEditMode) {
-      this.requestService.updateEquipment(this.equipment).subscribe({
+      this.equipmentService.updateEquipment(this.equipment).subscribe({
         next: () => {
           this.isLoading = false;
           this.router.navigate(['/equipments']);
@@ -67,7 +67,7 @@ export class EquipmentFormComponent implements OnInit {
         }
       });
     } else {
-      this.requestService.createEquipment(this.equipment).subscribe({
+      this.equipmentService.createEquipment(this.equipment).subscribe({
         next: () => {
           this.isLoading = false;
           this.router.navigate(['/equipments']);

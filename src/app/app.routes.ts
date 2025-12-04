@@ -20,7 +20,7 @@ export const routes: Routes = [
   { 
     path: '', 
     component: LayoutComponent, 
-    // canActivate: [authGuard], // Disabled for looser security as requested
+    canActivate: [authGuard], 
     children: [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'users/new', component: UserFormComponent },

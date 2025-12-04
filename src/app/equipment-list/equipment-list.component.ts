@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { RequestService } from '../services/request.service';
+import { EquipmentService } from '../services/equipment.service';
 
 @Component({
   selector: 'app-equipment-list',
@@ -14,14 +14,17 @@ export class EquipmentListComponent implements OnInit {
   equipments: any[] = [];
   filteredEquipments: any[] = [];
   isLoading = true;
-  private requestService = inject(RequestService);
+  errorMsg = '';
+  private equipmentService = inject(EquipmentService);
 
   ngOnInit() {
     this.loadEquipments();
   }
 
   loadEquipments() {
-    this.requestService.getEquipments().subscribe({
+    this.isLoading = true;
+    this.errorMsg = '';
+    this.equipmentService.getEquipments().subscribe({
       next: (data) => {
         this.equipments = Array.isArray(data) ? data : (data as any).content || [];
         this.filteredEquipments = [...this.equipments];
@@ -30,6 +33,7 @@ export class EquipmentListComponent implements OnInit {
       error: (err) => {
         console.error('Failed to load equipments', err);
         this.isLoading = false;
+        this.errorMsg = 'Failed to load equipments. ' + (err.message || 'Server error');
       }
     });
   }
@@ -45,7 +49,7 @@ export class EquipmentListComponent implements OnInit {
 
   deleteEquipment(id: number) {
     if (confirm('Are you sure you want to delete this equipment?')) {
-      this.requestService.deleteEquipment(id).subscribe({
+      this.equipmentService.deleteEquipment(id).subscribe({
         next: () => {
           this.equipments = this.equipments.filter(e => e.id !== id);
           this.filteredEquipments = this.filteredEquipments.filter(e => e.id !== id);
