@@ -125,9 +125,21 @@ export class TicketFormComponent implements OnInit {
     this.isLoading = true;
     this.errorMsg = '';
 
-    // Validation
+    // Additional validation for required fields
     if (!this.ticket.equipmentId) {
       this.errorMsg = 'Please select an equipment.';
+      this.isLoading = false;
+      return;
+    }
+
+    if (!this.ticket.modelName || this.ticket.modelName.trim() === '') {
+      this.errorMsg = 'Equipment model name is required.';
+      this.isLoading = false;
+      return;
+    }
+
+    if (!this.ticket.note || this.ticket.note.trim() === '') {
+      this.errorMsg = 'Description/note is required.';
       this.isLoading = false;
       return;
     }
@@ -147,7 +159,7 @@ export class TicketFormComponent implements OnInit {
     } else {
       // Create new ticket - API: POST /api/Request
       const formData = new FormData();
-      
+
       let statusId = 1;
       switch(this.ticket.status) {
           case 'Open': statusId = 1; break;
@@ -157,39 +169,117 @@ export class TicketFormComponent implements OnInit {
           default: statusId = 1;
       }
 
-      const payload = {
-        equipmentId: this.ticket.equipmentId,
-        modelName: this.ticket.modelName,
-        latitude: this.ticket.latitude || 0.0,
-        longitude: this.ticket.longitude || 0.0,
-        description: this.ticket.note,
-        status: statusId.toString(),
-        details: this.selectedServiceIds.map(id => ({ ServiceId: id }))
+      // Create the payload object with required fields based on API spec
+      const payload: any = {
+        equipmentId: Number(this.ticket.equipmentId),
+        modelName: String(this.ticket.modelName || ''),
+        latitude: Number(this.ticket.latitude || 0),
+        longitude: Number(this.ticket.longitude || 0),
+        description: String(this.ticket.note || ''),
+        note: String(this.ticket.note || ''), // Include both description and note
+        status: String(statusId),
+        createBy: 1 // Add createBy field which might be required
       };
 
-      // API expects 'param' field with JSON string
+      // Only add details if there are selected services
+      if (this.selectedServiceIds && this.selectedServiceIds.length > 0) {
+        payload.details = this.selectedServiceIds.map(id => ({ ServiceId: Number(id) }));
+      }
+
+      console.log('Creating ticket with payload:', payload);
+
+      // Validate that the payload is a valid JSON before stringifying
+      try {
+        JSON.stringify(payload);
+      } catch (e) {
+        console.error('Invalid payload JSON:', e);
+        this.errorMsg = 'Invalid ticket data format.';
+        this.isLoading = false;
+        return;
+      }
+
+      // Add the payload as a JSON string in the 'param' field
       formData.append('param', JSON.stringify(payload));
 
+      // Add file if selected with validation
       if (this.selectedFile) {
-        formData.append('file', this.selectedFile);
-        formData.append('Name', 'file');
-        formData.append('FileName', this.selectedFile.name);
-        formData.append('ContentType', this.selectedFile.type);
-        formData.append('Length', this.selectedFile.size.toString());
-        formData.append('ContentDisposition', `form-data; name="file"; filename="${this.selectedFile.name}"`);
-        formData.append('Headers', '{}');
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(this.selectedFile.type)) {
+          this.errorMsg = 'Only image files (JPEG, PNG, GIF) are allowed.';
+          this.isLoading = false;
+          return;
+        }
+
+        // Validate file size (e.g., max 5MB)
+        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        if (this.selectedFile.size > maxSize) {
+          this.errorMsg = 'File size exceeds 5MB limit.';
+          this.isLoading = false;
+          return;
+        }
+
+        formData.append('file', this.selectedFile, this.selectedFile.name);
+      }
+
+      // Debug: Log what's in the FormData before sending
+      console.log('FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
       }
 
       this.requestService.createRequest(formData).subscribe({
-        next: () => {
+        next: (response) => {
           this.isLoading = false;
-          console.log('Ticket created successfully via POST /api/Request');
+          console.log('Ticket created successfully via POST /api/Request', response);
           this.router.navigate(['/ticket-list']);
         },
         error: (err) => {
           console.error('Create ticket failed:', err);
+          console.error('Error status:', err.status);
+          console.error('Error message:', err.message);
+          console.error('Error details:', err);
+
           this.isLoading = false;
-          this.errorMsg = 'Failed to create ticket. Please try again.';
+
+          // Enhanced error handling with more detailed information
+          let errorMessage = 'Failed to create ticket. Please try again.';
+
+          if (err && err.error) {
+            if (typeof err.error === 'string') {
+              // Try to parse if it's a JSON string
+              try {
+                const parsedError = JSON.parse(err.error);
+                if (parsedError.message) {
+                  errorMessage = `Server error: ${parsedError.message}`;
+                } else if (parsedError.Message) {
+                  errorMessage = `Server error: ${parsedError.Message}`;
+                } else {
+                  errorMessage = `Server error: ${err.error}`;
+                }
+              } catch (e) {
+                // If it's not JSON, use as is
+                errorMessage = `Server error: ${err.error}`;
+              }
+            } else if (err.error?.message) {
+              errorMessage = `Server error: ${err.error.message}`;
+            } else if (err.error?.Message) {
+              errorMessage = `Server error: ${err.error.Message}`;
+            } else if (err.statusText) {
+              errorMessage = `HTTP ${err.status}: ${err.statusText}`;
+            } else if (typeof err.error === 'object') {
+              errorMessage = `Validation error: ${JSON.stringify(err.error)}`;
+            }
+          } else if (err.message) {
+            errorMessage = `Request error: ${err.message}`;
+          } else if (err.statusText) {
+            errorMessage = `HTTP ${err.status}: ${err.statusText}`;
+          } else {
+            errorMessage = `HTTP Error ${err.status}`;
+          }
+
+          this.errorMsg = errorMessage;
+          console.error('Detailed error message:', errorMessage);
         }
       });
     }

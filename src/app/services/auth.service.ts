@@ -65,26 +65,4 @@ export class AuthService {
     }
     return null;
   }
-
-  getPengguna(): Observable<any[]> {
-    // Using responseType: 'text' to handle potential non-JSON responses safely
-    return this.http.get<any[]>(`${this.baseUrl}/Pengguna`, { responseType: 'text' as 'json' }).pipe(
-      map((response: any) => {
-        let parsed: any = response;
-        if (typeof response === 'string') {
-           const clean = response.replace(/^\uFEFF/gm, "").trim();
-           try {
-             parsed = JSON.parse(clean);
-             if (typeof parsed === 'string') {
-                try { parsed = JSON.parse(parsed); } catch(e) {}
-             }
-           } catch(e) {
-             console.warn('Pengguna JSON parse failed', e);
-             return [];
-           }
-        }
-        return Array.isArray(parsed) ? parsed : (parsed as any).content || [];
-      })
-    );
-  }
 }

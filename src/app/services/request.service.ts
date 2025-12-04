@@ -183,11 +183,20 @@ export class RequestService {
   }
 
   createRequest(ticketData: any): Observable<any> {
-    // Angular handles FormData Content-Type automatically
-    return this.http.post(this.baseUrl, ticketData, { responseType: 'text' }).pipe(
+    // Return regular post without observing full response to match original setup
+    // but keep enhanced error handling
+    return this.http.post(this.baseUrl, ticketData, {
+      responseType: 'text'
+    }).pipe(
       tap({
         next: (res) => console.log('RequestService: createRequest raw success', res),
-        error: (err) => console.error('RequestService: createRequest failed', err)
+        error: (err) => {
+          console.error('RequestService: createRequest failed', err);
+          // Log the error response body if available
+          if (err.error) {
+            console.error('Error response body:', err.error);
+          }
+        }
       }),
       map(response => this.parseResponse(response))
     );
