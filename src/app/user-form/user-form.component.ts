@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -27,6 +27,17 @@ export class UserFormComponent implements OnInit {
   isLoading = false;
   errorMsg = '';
   roles: any[] = []; // Store the roles fetched from the backend
+  // Error messages per field
+  fieldErrors: {
+    fullName?: string;
+    emailAddress?: string;
+    companyName?: string;
+    telp?: string;
+    password?: string;
+    roleId?: string;
+  } = {};
+  isRoleDropdownOpen = false;
+  selectedRoleName: string | null = null;
 
   private userService = inject(UserService);
   private requestService = inject(RequestService);
@@ -95,6 +106,9 @@ export class UserFormComponent implements OnInit {
           // If roles are already loaded, update the roleId/roleName
           if (this.roles.length > 0) {
             this.updateUserRoleFromRoles(found);
+          } else {
+            // Set the selected role name after roles are loaded (in the roles loading callback)
+            this.selectedRoleName = found.roleName || '';
           }
         }
         this.isLoading = false;
@@ -112,6 +126,10 @@ export class UserFormComponent implements OnInit {
     if (matchedRole) {
       this.user.roleId = matchedRole.id;
       this.user.roleName = matchedRole.roleName;
+      this.selectedRoleName = matchedRole.roleName;
+    } else {
+      // Jika tidak ditemukan role yang cocok, gunakan nama dari user
+      this.selectedRoleName = found.roleName || '';
     }
   }
 
@@ -119,16 +137,61 @@ export class UserFormComponent implements OnInit {
     const selectedRole = this.roles.find(role => role.id === roleId);
     if (selectedRole) {
       this.user.roleName = selectedRole.roleName;
+      this.selectedRoleName = selectedRole.roleName;
     }
+  }
+
+  selectRole(roleId: number, roleName: string) {
+    this.user.roleId = roleId;
+    this.user.roleName = roleName;
+    this.selectedRoleName = roleName;
   }
 
   onSubmit() {
     this.isLoading = true;
     this.errorMsg = '';
+    // Reset field errors
+    this.fieldErrors = {};
 
-    // Make sure we have a roleId selected
+    // Validasi field-field wajib dan set error per field
+    if (!this.user.fullName?.trim()) {
+      this.fieldErrors.fullName = 'Full Name is required';
+    }
+
+    if (!this.user.emailAddress?.trim()) {
+      this.fieldErrors.emailAddress = 'Email Address is required';
+    } else {
+      // Validasi format email sederhana
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.user.emailAddress)) {
+        this.fieldErrors.emailAddress = 'Please enter a valid email address';
+      }
+    }
+
+    if (!this.user.companyName?.trim()) {
+      this.fieldErrors.companyName = 'Company Name is required';
+    }
+
+    if (!this.user.telp?.trim()) {
+      this.fieldErrors.telp = 'Phone is required';
+    }
+
+    // Validasi password jika dalam mode create
+    if (!this.isEditMode) {
+      if (!this.user.password?.trim()) {
+        this.fieldErrors.password = 'Password is required';
+      } else if (this.user.password && this.user.password.length < 5) {
+        this.fieldErrors.password = 'Password must be at least 5 characters long';
+      }
+    }
+
     if (this.user.roleId === undefined || this.user.roleId === null) {
-      this.errorMsg = 'Please select a role.';
+      this.fieldErrors.roleId = 'Please select a role';
+    }
+
+    // Cek apakah ada error field
+    const hasFieldErrors = Object.values(this.fieldErrors).some(error => error);
+    if (hasFieldErrors) {
       this.isLoading = false;
       return;
     }
@@ -148,5 +211,13 @@ export class UserFormComponent implements OnInit {
         this.errorMsg = `Failed to ${this.isEditMode ? 'update' : 'create'} user.`;
       }
     });
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.role-dropdown')) {
+      this.isRoleDropdownOpen = false;
+    }
   }
 }

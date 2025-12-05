@@ -18,6 +18,7 @@ export class UserService {
         error: (err) => console.error('UserService: getUsers failed', err)
       }),
       catchError((err) => {
+        console.error('UserService: getUsers error details', err);
         // Handle 401 or other errors gracefully to prevent app crash
         console.warn('UserService: returning empty list due to error');
         return of([]);

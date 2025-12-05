@@ -1,12 +1,13 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { EquipmentService } from '../services/equipment.service';
 
 @Component({
   selector: 'app-equipment-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './equipment-list.component.html',
   styleUrl: './equipment-list.component.css'
 })
@@ -15,6 +16,7 @@ export class EquipmentListComponent implements OnInit {
   filteredEquipments: any[] = [];
   isLoading = true;
   errorMsg = '';
+  searchTerm = '';
   private equipmentService = inject(EquipmentService);
 
   ngOnInit() {
@@ -38,13 +40,20 @@ export class EquipmentListComponent implements OnInit {
     });
   }
 
-  onSearch(event: any) {
-    const term = event.target.value.toLowerCase();
-    this.filteredEquipments = this.equipments.filter(e => 
-      e.modelName?.toLowerCase().includes(term) || 
+  onSearch(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.searchTerm = target.value;
+    const term = target.value.toLowerCase();
+    this.filteredEquipments = this.equipments.filter(e =>
+      e.modelName?.toLowerCase().includes(term) ||
       e.description?.toLowerCase().includes(term) ||
       e.location?.toLowerCase().includes(term)
     );
+  }
+
+  clearSearch() {
+    this.searchTerm = '';
+    this.filteredEquipments = [...this.equipments]; // Reset to all equipments
   }
 
   deleteEquipment(id: number) {

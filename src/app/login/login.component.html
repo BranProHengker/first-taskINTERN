@@ -15,31 +15,31 @@
       <!-- <p class="text-gray-400 text-sm mt-2 tracking-widest uppercase">Access Your Dashboard</p> -->
     </div>
 
-    <form (ngSubmit)="onLogin()" class="space-y-6">
+    <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="space-y-6">
       <div class="space-y-2">
         <label class="text-xs font-bold text-gray-500 tracking-wider uppercase ml-1">Email Address</label>
-        <input 
-          type="email" 
-          [(ngModel)]="email" 
-          name="email"
+        <input
+          type="email"
+          formControlName="email"
           class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0"
           placeholder="name@company.com"
-          required
         >
+        <div *ngIf="email?.invalid && (email?.touched || submitted)" class="text-red-500 text-xs mt-1">
+          <div *ngIf="email?.errors?.['required']">Email is required.</div>
+          <div *ngIf="email?.errors?.['email']">Please enter a valid email address.</div>
+        </div>
       </div>
 
       <div class="space-y-2">
         <label class="text-xs font-bold text-gray-500 tracking-wider uppercase ml-1">Password</label>
         <div class="relative">
-          <input 
-            [type]="showPassword ? 'text' : 'password'" 
-            [(ngModel)]="password" 
-            name="password"
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
             class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0 pr-10"
             placeholder="••••••••"
-            required
           >
-          <button 
+          <button
             type="button"
             (click)="showPassword = !showPassword"
             class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
@@ -52,6 +52,10 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-4.803m5.604-3.778A9.968 9.968 0 0112 3c4.478 0 8.268 2.943 9.543 7a10.079 10.079 0 01-9.457 11.786M9.75 9.75l4.5 4.5M9.75 15.75l4.5-4.5" />
             </svg>
           </button>
+        </div>
+        <div *ngIf="password?.invalid && (password?.touched || submitted)" class="text-red-500 text-xs mt-1">
+          <div *ngIf="password?.errors?.['required']">Password is required.</div>
+          <div *ngIf="password?.errors?.['minlength']">Password must be at least 5 characters long.</div>
         </div>
       </div>
 

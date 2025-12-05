@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -32,7 +32,17 @@ export class TicketFormComponent implements OnInit {
   isEditMode = false;
   isLoading = false;
   errorMsg = '';
-  
+  // Error messages per field
+  fieldErrors: {
+    equipmentId?: string;
+    modelName?: string;
+    note?: string;
+    // status will be commented as requested
+  } = {};
+  isEquipmentDropdownOpen = false;
+  isServicesDropdownOpen = false;
+  selectedEquipmentName: string | null = null;
+
   selectedFile: File | null = null;
   imagePreview: string | ArrayBuffer | null = null;
 
@@ -72,16 +82,36 @@ export class TicketFormComponent implements OnInit {
     const selected = this.equipments.find(e => e.id == this.ticket.equipmentId);
     if (selected) {
       this.ticket.modelName = selected.modelName;
+      this.selectedEquipmentName = selected.equipment ? selected.equipment + ' - ' + selected.modelName : selected.modelName;
     }
   }
 
-  onServiceChange(event: Event, serviceId: number) {
-    const checkbox = event.target as HTMLInputElement;
-    if (checkbox.checked) {
-      this.selectedServiceIds.push(serviceId);
+  selectEquipment(equipmentId: number, equipmentName: string, modelName: string) {
+    this.ticket.equipmentId = equipmentId;
+    this.ticket.modelName = modelName;
+    this.selectedEquipmentName = equipmentName ? equipmentName + ' - ' + modelName : modelName;
+    this.isEquipmentDropdownOpen = false;
+    this.onEquipmentChange();
+  }
+
+  toggleServiceSelection(serviceId: number) {
+    const index = this.selectedServiceIds.indexOf(serviceId);
+    if (index > -1) {
+      this.selectedServiceIds.splice(index, 1);
     } else {
-      this.selectedServiceIds = this.selectedServiceIds.filter(id => id !== serviceId);
+      this.selectedServiceIds.push(serviceId);
     }
+  }
+
+  isSelectedService(serviceId: number): boolean {
+    return this.selectedServiceIds.includes(serviceId);
+  }
+
+  // onServiceChange is replaced by toggleServiceSelection and isSelectedService methods
+  // keeping it for compatibility in case it's called elsewhere
+  onServiceChange(event: Event, serviceId: number) {
+    // This method is deprecated with the new dropdown design
+    // Kept for backward compatibility if called elsewhere
   }
 
   loadRequest(id: number) {
@@ -124,22 +154,25 @@ export class TicketFormComponent implements OnInit {
   onSubmit() {
     this.isLoading = true;
     this.errorMsg = '';
+    // Reset field errors
+    this.fieldErrors = {};
 
     // Additional validation for required fields
     if (!this.ticket.equipmentId) {
-      this.errorMsg = 'Please select an equipment.';
-      this.isLoading = false;
-      return;
+      this.fieldErrors.equipmentId = 'Equipment is required.';
     }
 
     if (!this.ticket.modelName || this.ticket.modelName.trim() === '') {
-      this.errorMsg = 'Equipment model name is required.';
-      this.isLoading = false;
-      return;
+      this.fieldErrors.modelName = 'Equipment model name is required.';
     }
 
     if (!this.ticket.note || this.ticket.note.trim() === '') {
-      this.errorMsg = 'Description/note is required.';
+      this.fieldErrors.note = 'Description/note is required.';
+    }
+
+    // Cek apakah ada error field
+    const hasFieldErrors = Object.values(this.fieldErrors).some(error => error);
+    if (hasFieldErrors) {
       this.isLoading = false;
       return;
     }
@@ -282,6 +315,15 @@ export class TicketFormComponent implements OnInit {
           console.error('Detailed error message:', errorMessage);
         }
       });
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.equipment-dropdown') && !target.closest('.services-dropdown')) {
+      this.isEquipmentDropdownOpen = false;
+      this.isServicesDropdownOpen = false;
     }
   }
 }

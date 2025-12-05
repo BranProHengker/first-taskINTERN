@@ -7,30 +7,46 @@
 
         <div class="relative z-10 flex flex-col h-full">
             <!-- Header Stats & Actions -->
-            <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4">
+            <div class="mb-8">
+              <div class="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
                 <div>
                   <h2 class="text-3xl font-bold text-white mb-1">All Tickets</h2>
                   <p class="text-gray-400 text-sm">View and manage all support requests</p>
                 </div>
-                
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                   <div class="relative flex-1 md:w-64 group">
-                     <input 
-                       type="text" 
-                       placeholder="Search tickets..." 
-                       (input)="onSearch($event)"
-                       class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:ring-0 transition outline-none input-field" 
-                       style="focus:border-color var(--color-primary)"
-                     >
-                     <svg class="w-4 h-4 text-gray-500 absolute left-3.5 top-3 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                   </div>
-                   
-                   <button routerLink="/tickets/new" class="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold shadow-lg flex items-center gap-2 text-white transition transform hover:-translate-y-0.5" style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 rgba(215, 35, 35, 0.39)">
-                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                     New Ticket
-                   </button>
+              </div>
+
+              <div class="flex justify-between items-center mt-8">
+                <div class="flex gap-4">
+                  <div class="relative w-64">
+                    <input
+                      type="text"
+                      [(ngModel)]="searchTerm"
+                      placeholder="Search tickets..."
+                      (input)="onSearch($event)"
+                      class="w-full pl-10 pr-10 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:ring-0 transition-colors input-field"
+                      style="focus:border-color var(--color-primary)"
+                    >
+                    <svg class="w-4 h-4 text-gray-500 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+
+                    <!-- Clear button -->
+                    <button
+                      *ngIf="searchTerm"
+                      (click)="clearSearch()"
+                      class="absolute right-3 top-2.5 text-gray-500 hover:text-white cursor-pointer"
+                    >
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-             </div>
+
+                <button routerLink="/tickets/new" class="btn-primary px-6 py-2.5 rounded-lg text-sm shadow-lg flex items-center gap-2" style="box-shadow: 0 4px 14px 0 rgba(215, 35, 35, 0.39)">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                  New Ticket
+                </button>
+              </div>
+            </div>
 
              <!-- Filter Tabs -->
              <div class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">

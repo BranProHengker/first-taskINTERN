@@ -22,9 +22,9 @@
             </div>
          </div>
          
-         <div class="flex gap-3" *ngIf="request">
+         <!-- <div class="flex gap-3" *ngIf="request">
             <span class="px-4 py-2 rounded-lg bg-white/5 border border-white/5 text-gray-400 text-sm font-mono shadow-md">ID: #{{ request.id }}</span>
-         </div>
+         </div> -->
       </div>
 
       <div *ngIf="isLoading" class="flex-1 flex flex-col items-center justify-center gap-4 py-20">
@@ -65,30 +65,32 @@
             <!-- Body -->
             <div class="p-8 space-y-8">
                <!-- Data Grid (Detail List) -->
-               <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-white/5 rounded-xl border border-white/5">
-                  <div>
-                     <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Request No</span>
-                     <span class="text-white font-mono font-medium">{{ request.requestNo || '-' }}</span>
-                  </div>
-                  <div>
-                     <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Created Date</span>
-                     <span class="text-white font-medium">{{ request.createDate | date:'medium' }}</span>
-                  </div>
-                  <div>
-                     <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Status</span>
-                     <span [class]="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ' + getStatusColor(request.status)">
-                        {{ request.status }}
-                     </span>
-                  </div>
-                  <div>
-                     <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Created By</span>
-                     <div class="flex items-center gap-2">
-                        <div class="w-5 h-5 rounded-full bg-[#303841] flex items-center justify-center text-[10px] text-white">
-                           {{ (request.createBy || '?').toString().slice(0,1) }}
-                        </div>
-                        <span class="text-white font-medium">User {{ request.createBy || 'System' }}</span>
-                     </div>
-                  </div>
+               <div class="flex justify-center w-full">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-white/5 rounded-xl border border-white/5 w-full max-w-4xl">
+                    <div>
+                       <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Request No</span>
+                       <span class="text-white font-mono font-medium">{{ request.requestNo || '-' }}</span>
+                    </div>
+                    <div>
+                       <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Status</span>
+                       <span [class]="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ' + getStatusColor(request.status)">
+                          {{ request.status }}
+                       </span>
+                    </div>
+                    <div>
+                       <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Created By</span>
+                       <div class="flex items-center gap-2">
+                          <div class="w-5 h-5 rounded-full bg-[#303841] flex items-center justify-center text-[10px] text-white">
+                             {{ (request.createBy || '?').toString().slice(0,1) }}
+                          </div>
+                          <span class="text-white font-medium">User {{ request.createBy || 'System' }}</span>
+                       </div>
+                    </div>
+                    <div>
+                       <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Request Type</span>
+                       <span class="text-white font-medium">{{ request.requestType || 'Standard' }}</span>
+                    </div>
+                 </div>
                </div>
 
                <!-- Description -->
@@ -135,45 +137,13 @@
             </div>
           </div>
 
-          <!-- Activity Stream -->
-          <div class="glass-panel rounded-2xl shadow-xl p-8">
-             <h4 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: var(--color-primary)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                Activity History
-             </h4>
-             
-             <div class="relative space-y-8 pl-2 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-white/5">
-                <!-- Item 1 -->
-                <div class="relative pl-8">
-                   <div class="absolute left-0 top-1.5 w-[24px] h-[24px] rounded-full bg-[#303841] border-2 z-10 flex items-center justify-center" style="border-color: var(--color-primary)">
-                      <div class="w-2 h-2 rounded-full" style="background-color: var(--color-primary)"></div>
-                   </div>
-                   <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-1">
-                      <p class="text-sm text-white font-medium">request Created</p>
-                      <span class="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded">{{ request.createDate | date:'short' }}</span>
-                   </div>
-                   <p class="text-xs text-gray-400">request #{{ request.id }} was created by User {{ request.createBy || 'System' }}</p>
-                </div>
-                
-                <!-- Item 2 (Mock for visual) -->
-                <div class="relative pl-8" *ngIf="request.status !== 'Open'">
-                   <div class="absolute left-0 top-1.5 w-[24px] h-[24px] rounded-full bg-[#303841] border-2 border-gray-600 z-10 flex items-center justify-center">
-                      <div class="w-2 h-2 rounded-full bg-gray-600"></div>
-                   </div>
-                   <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-1">
-                      <p class="text-sm text-white font-medium">Status Updated</p>
-                      <span class="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded">Recently</span>
-                   </div>
-                   <p class="text-xs text-gray-400">Status changed to <span class="text-white font-bold">{{ request.status }}</span></p>
-                </div>
-             </div>
-          </div>
+
         </div>
 
         <!-- Sidebar -->
         <div class="space-y-6">
           <!-- Requester Info -->
-          <div class="glass-panel rounded-2xl shadow-xl p-6">
+          <!-- <div class="glass-panel rounded-2xl shadow-xl p-6">
              <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Requester</h4>
              <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-lg bg-[#303841] border border-white/10 flex items-center justify-center text-lg font-bold shadow-inner" style="color: var(--color-primary)">
@@ -185,17 +155,16 @@
                 </div>
              </div>
              <div class="mt-6 pt-6 border-t border-white/5 space-y-3">
-                <!-- Email and Phone removed as per request -->
              </div>
-          </div>
+          </div> -->
 
           <!-- Actions -->
-          <div class="glass-panel rounded-2xl shadow-xl p-6">
+          <!-- <div class="glass-panel rounded-2xl shadow-xl p-6">
             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Actions</h4>
-            <div class="space-y-3">
+            <div class="space-y-3"> -->
               
               <!-- Status Dropdown -->
-              <div class="relative">
+              <!-- <div class="relative">
                  <button 
                   (click)="isStatusDropdownOpen = !isStatusDropdownOpen"
                   class="w-full py-2.5 px-4 rounded-lg text-white text-sm font-semibold shadow-lg flex items-center justify-center gap-2 transition transform hover:-translate-y-0.5" style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 rgba(215, 35, 35, 0.39)">
@@ -203,9 +172,9 @@
                     Change Status
                     <svg class="w-4 h-4 ml-auto transition-transform duration-200" [class.rotate-180]="isStatusDropdownOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                  </button>
-                 
+                  -->
                  <!-- Dropdown Menu -->
-                 <div *ngIf="isStatusDropdownOpen" class="absolute left-0 right-0 top-full mt-2 rounded-xl bg-[#1E1E2E] border border-white/10 shadow-2xl overflow-hidden z-50">
+                 <!-- <div *ngIf="isStatusDropdownOpen" class="absolute left-0 right-0 top-full mt-2 rounded-xl bg-[#1E1E2E] border border-white/10 shadow-2xl overflow-hidden z-50">
                     <button (click)="updateStatus('Open')" class="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition flex items-center gap-2">
                        <span class="w-2 h-2 rounded-full bg-green-400"></span> Open
                     </button>
@@ -221,7 +190,7 @@
                  </div>
               </div>
           </div>
-        </div>
+        </div> -->
       </div>
   </div>
 </div>

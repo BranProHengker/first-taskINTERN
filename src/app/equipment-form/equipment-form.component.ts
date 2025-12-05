@@ -22,6 +22,12 @@ export class EquipmentFormComponent implements OnInit {
   isEditMode = false;
   isLoading = false;
   errorMsg = '';
+  fieldErrors: {
+    equipmentNumber?: string;
+    modelName?: string;
+    location?: string;
+    description?: string;
+  } = {};
 
   private equipmentService = inject(EquipmentService);
   private router = inject(Router);
@@ -53,6 +59,34 @@ export class EquipmentFormComponent implements OnInit {
   onSubmit() {
     this.isLoading = true;
     this.errorMsg = '';
+    // Reset field errors
+    this.fieldErrors = {};
+
+    // Validasi field-field wajib
+    if (!this.equipment.equipment) {
+      this.fieldErrors.equipmentNumber = 'Equipment Number is required';
+    }
+
+    if (!this.equipment.modelName?.trim()) {
+      this.fieldErrors.modelName = 'Model Name is required';
+    }
+
+    // Validasi field location (opsional)
+    if (this.equipment.location && this.equipment.location.trim().length < 3) {
+      this.fieldErrors.location = 'Location must be at least 3 characters long';
+    }
+
+    // Validasi field description (opsional)
+    if (this.equipment.description && this.equipment.description.trim().length < 5) {
+      this.fieldErrors.description = 'Description must be at least 5 characters long';
+    }
+
+    // Cek apakah ada error field
+    const hasFieldErrors = Object.values(this.fieldErrors).some(error => error);
+    if (hasFieldErrors) {
+      this.isLoading = false;
+      return;
+    }
 
     if (this.isEditMode) {
       this.equipmentService.updateEquipment(this.equipment).subscribe({

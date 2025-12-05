@@ -1,10 +1,19 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { isPlatformBrowser } from '@angular/common';
+import { inject } from '@angular/core';
+import { PLATFORM_ID } from '@angular/core';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // Get token dari localStorage - cek berbagai kemungkinan key
-  let token = localStorage.getItem('auth_token') ||
-              localStorage.getItem('token') ||
-              sessionStorage.getItem('token');
+  const platformId = inject(PLATFORM_ID);
+
+  // Hanya akses localStorage di browser, bukan di server
+  let token: string | null = null;
+
+  if (isPlatformBrowser(platformId)) {
+    token = localStorage.getItem('auth_token') ||
+            localStorage.getItem('token') ||
+            sessionStorage.getItem('token');
+  }
 
   console.log('[AuthInterceptor] Token from storage:', token ? 'Found' : 'Not found');
 

@@ -1,6 +1,6 @@
 import { Component, inject, Input, Output, EventEmitter, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -70,13 +70,27 @@ import { AuthService } from '../services/auth.service';
 export class SidebarComponent {
   @Input() isOpen = false;
   @Output() closeSidebar = new EventEmitter<void>();
-  
+
   private platformId = inject(PLATFORM_ID);
+  private router = inject(Router);
   authService = inject(AuthService);
-  currentUser = this.authService.getCurrentUser();
+  currentUser: any = null;
+
+  constructor() {
+    // Load current user and update it when component initializes
+    this.loadCurrentUser();
+  }
+
+  loadCurrentUser() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.currentUser = this.authService.getCurrentUser();
+    }
+  }
 
   logout() {
     this.authService.logout();
+    // Update current user after logout
+    this.loadCurrentUser();
   }
 
   // Removed onLinkClick to strictly prevent auto-closing
