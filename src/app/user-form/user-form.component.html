@@ -19,10 +19,8 @@
         
         <div class="space-y-2">
           <label class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Role</label>
-          <select [(ngModel)]="user.roleName" name="roleName" class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0 bg-[#303841] text-white">
-            <option value="Admin">Admin</option>
-            <option value="User">User</option>
-            <option value="Developer">Developer</option>
+          <select [(ngModel)]="user.roleId" name="roleId" class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0 bg-[#303841] text-white" (ngModelChange)="updateRoleName($event)">
+            <option *ngFor="let role of roles" [value]="role.id">{{ role.roleName }}</option>
           </select>
         </div>
       </div>
