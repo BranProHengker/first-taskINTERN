@@ -4,12 +4,13 @@ import { Observable, tap, map } from 'rxjs';
 import { User, LoginRequest, LoginResponse } from '../models/user.model';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private baseUrl = 'http://192.168.5.200:60776/api/General';
+  private baseUrl = `${environment.apiUrl}/api/General`;
   private readonly TOKEN_KEY = 'auth_token'; 
   private readonly USER_KEY = 'auth_user';
   private platformId = inject(PLATFORM_ID);

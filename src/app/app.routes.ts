@@ -12,6 +12,7 @@ import { EquipmentListComponent } from './equipment-list/equipment-list.componen
 import { EquipmentFormComponent } from './equipment-form/equipment-form.component';
 import { RoleListComponent } from './role-list/role-list';
 import { RoleFormComponent } from './role-form/role-form';
+import { ProfileComponent } from './components/profile/profile.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -34,7 +35,8 @@ export const routes: Routes = [
       { path: 'equipments/:id/edit', component: EquipmentFormComponent },
       { path: 'roles', component: RoleListComponent },
       { path: 'roles/new', component: RoleFormComponent },
-      { path: 'roles/:id/edit', component: RoleFormComponent }
+      { path: 'roles/:id/edit', component: RoleFormComponent },
+      { path: 'profile', component: ProfileComponent }
     ]
   },
   { path: '**', redirectTo: '/login' }

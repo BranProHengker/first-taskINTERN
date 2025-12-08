@@ -1,0 +1,160 @@
+<div class="h-full flex flex-col p-6 md:p-10 overflow-auto relative">
+  <!-- Decorative background blobs -->
+  <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+    <div class="absolute top-10 right-10 w-96 h-96 rounded-full blur-3xl opacity-5" style="background-color: var(--color-primary)"></div>
+    <div class="absolute bottom-10 left-10 w-96 h-96 bg-white/5 rounded-full blur-3xl opacity-5"></div>
+  </div>
+
+  <div class="relative z-10">
+    <!-- Header -->
+    <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div class="flex items-center gap-4">
+        <a href="/dashboard" class="group p-2.5 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition shadow-lg">
+          <svg class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        </a>
+        <div>
+          <div class="flex items-center gap-2 text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">
+            <span>Settings</span>
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            <span style="color: var(--color-primary)">Profile</span>
+          </div>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Profile Settings</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-center w-full">
+      <div class="glass-panel rounded-2xl shadow-2xl overflow-hidden max-w-3xl mx-auto w-full">
+        <!-- Header -->
+        <div class="p-8 border-b border-white/5 bg-white/0.02">
+          <p class="text-sm text-gray-400">Manage your profile information and account settings.</p>
+        </div>
+
+        <!-- Body -->
+        <div class="p-8">
+          <div class="mb-8">
+            <h3 class="text-lg font-semibold text-white mb-4">User Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Full Name</label>
+                <input 
+                  type="text" 
+                  class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0"
+                  [value]="currentUser?.name || ''" 
+                  readonly
+                />
+              </div>
+              
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Email Address</label>
+                <input 
+                  type="email" 
+                  class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0" 
+                  [value]="currentUser?.email || ''" 
+                  readonly
+                />
+              </div>
+              
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Role</label>
+                <input 
+                  type="text" 
+                  class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0" 
+                  [value]="currentUser?.roleName || ''" 
+                  readonly
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-white/10 pt-8 mt-4">
+            <h3 class="text-lg font-semibold text-white mb-4">Change Password</h3>
+            <form [formGroup]="changePasswordForm" (ngSubmit)="onChangePasswordSubmit()" class="space-y-6">
+              <div class="space-y-2">
+                <label for="oldPassword" class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Old Password</label>
+                <div class="relative">
+                  <input
+                    type="{{ showOldPassword ? 'text' : 'password' }}"
+                    id="oldPassword"
+                    formControlName="oldPassword"
+                    class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0 pr-10"
+                    placeholder="Enter old password"
+                  />
+                  <button
+                    type="button"
+                    (click)="toggleShowOldPassword()"
+                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    <svg *ngIf="showOldPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <svg *ngIf="!showOldPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  </button>
+                </div>
+                <div *ngIf="changePasswordForm.get('oldPassword')?.invalid && changePasswordForm.get('oldPassword')?.touched"
+                     class="text-red-500 text-xs mt-1">
+                  Old password is required
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label for="newPassword" class="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">New Password</label>
+                <div class="relative">
+                  <input
+                    type="{{ showNewPassword ? 'text' : 'password' }}"
+                    id="newPassword"
+                    formControlName="newPassword"
+                    class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0 pr-10"
+                    placeholder="Enter new password"
+                  />
+                  <button
+                    type="button"
+                    (click)="toggleShowNewPassword()"
+                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    <svg *ngIf="showNewPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <svg *ngIf="!showNewPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  </button>
+                </div>
+                <div *ngIf="changePasswordForm.get('newPassword')?.invalid && changePasswordForm.get('newPassword')?.touched"
+                     class="text-red-500 text-xs mt-1">
+                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['required']">New password is required</div>
+                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['minlength'] && !changePasswordForm.get('newPassword')?.errors?.['required']">Password must be at least 6 characters</div>
+                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noUpperCase'] && !changePasswordForm.get('newPassword')?.errors?.['required']">Password must contain at least one uppercase letter</div>
+                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noLowerCase'] && !changePasswordForm.get('newPassword')?.errors?.['required']">Password must contain at least one lowercase letter</div>
+                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noNumber'] && !changePasswordForm.get('newPassword')?.errors?.['required']">Password must contain at least one number</div>
+                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noSpecialChar'] && !changePasswordForm.get('newPassword')?.errors?.['required']">Password must contain at least one special character</div>
+                </div>
+              </div>
+              
+              <div class="pt-6 border-t border-white/5 flex justify-end gap-4">
+                <button 
+                  type="submit" 
+                  [disabled]="changePasswordForm.invalid || isSubmitting"
+                  class="px-8 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95 flex items-center gap-2"
+                  style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 rgba(215, 35, 35, 0.39)"
+                >
+                  {{ isSubmitting ? 'Changing Password...' : 'Change Password' }}
+                </button>
+                
+                <div *ngIf="message" 
+                     [class]="messageType === 'success' ? 'text-green-500' : 'text-red-500'"
+                     class="flex items-center self-center">
+                  {{ message }}
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

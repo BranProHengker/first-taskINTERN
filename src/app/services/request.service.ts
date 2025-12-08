@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpBackend } from '@angular/common/http';
 import { Observable, map, of, tap } from 'rxjs';
 import { Ticket } from '../models/user.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RequestService {
-  private baseUrl = 'http://192.168.5.200:60776/api/Request';
+  private baseUrl = `${environment.apiUrl}/api/Request`;
   
   // Cache to support getById if endpoint doesn't support it
   private requestsCache: Ticket[] = [];
@@ -172,7 +173,7 @@ export class RequestService {
   }
 
   getRequestHistory(requestId: number): Observable<any> {
-    return this.http.get(`http://192.168.5.200:60776/api/Request/history/${requestId}`, { responseType: 'text' }).pipe(
+    return this.http.get(`${environment.apiUrl}/api/Request/history/${requestId}`, { responseType: 'text' }).pipe(
       tap({
         error: (err) => console.error(`RequestService: getRequestHistory(${requestId}) failed`, err)
       }),
@@ -182,7 +183,7 @@ export class RequestService {
 
   getEquipments(): Observable<any[]> {
     // Redundant but kept if needed, adding logs anyway
-    return this.http.get('http://192.168.5.200:60776/api/Equipment', { responseType: 'text' }).pipe(
+    return this.http.get(`${environment.apiUrl}/api/Equipment`, { responseType: 'text' }).pipe(
       tap({
         error: (err) => console.error('RequestService: getEquipments failed', err)
       }),
@@ -196,7 +197,7 @@ export class RequestService {
   // getEquipmentById, createEquipment, updateEquipment, deleteEquipment removed in favor of EquipmentService
 
   getServices(): Observable<any[]> {
-    return this.http.get('http://192.168.5.200:60776/api/Service?row=82', { responseType: 'text' }).pipe(
+    return this.http.get(`${environment.apiUrl}/api/Service?row=82`, { responseType: 'text' }).pipe(
       tap({
         error: (err) => console.error('RequestService: getServices failed', err)
       }),
@@ -242,7 +243,7 @@ export class RequestService {
   }
 
   updateRequest(ticket: any): Observable<any> {
-    return this.http.put(`http://192.168.5.200:60776/api/Request`, ticket, { responseType: 'text' }).pipe(
+    return this.http.put(`${environment.apiUrl}/api/Request`, ticket, { responseType: 'text' }).pipe(
       tap({
         error: (err) => console.error('RequestService: updateRequest failed', err)
       }),

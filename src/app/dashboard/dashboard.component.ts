@@ -120,9 +120,16 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         console.error(err);
         this.isLoading = false;
-        this.users = [];
-        this.filteredUsers = [];
-        this.availableRoles = [];
+
+        // Check if it's an authentication error
+        if (err.status === 401) {
+          // Redirect to login page
+          this.authService.logout(); // This will clear any invalid token and navigate to login
+        } else {
+          this.users = [];
+          this.filteredUsers = [];
+          this.availableRoles = [];
+        }
       }
     });
   }

@@ -197,11 +197,11 @@ export class UserFormComponent implements OnInit {
     }
 
     const request = this.isEditMode
-      ? this.userService.updateUser(this.user)
+      ? this.userService.updateUser({ ...this.user, id: this.user.id! })
       : this.userService.createUser(this.user);
 
     request.subscribe({
-      next: () => {
+      next: (response) => {
         this.isLoading = false;
         this.router.navigate(['/dashboard']);
       },

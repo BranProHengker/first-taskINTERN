@@ -26,6 +26,10 @@ import { AuthService } from '../services/auth.service';
           </button>
         </div>
         <div class="h-8 w-[1px] bg-white/10"></div>
+        <a [routerLink]="['/profile']" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 transition hover:text-white cursor-pointer" title="Profile">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+        </a>
+        <div class="h-8 w-[1px] bg-white/10"></div>
         <div class="flex items-center gap-3 pl-2">
           <div class="text-right hidden md:block">
             <p class="text-sm font-semibold text-white">{{ currentUser?.name || 'Guest' }}</p>
