@@ -13,6 +13,7 @@ import { RequestService } from '../services/request.service';
 export class RoleListComponent implements OnInit {
   roles: any[] = [];
   isLoading = true;
+  errorMsg: string = '';
   private requestService = inject(RequestService);
 
   ngOnInit() {
@@ -21,6 +22,7 @@ export class RoleListComponent implements OnInit {
 
   loadRoles() {
     this.isLoading = true;
+    this.errorMsg = '';
     this.requestService.getRoles().subscribe({
       next: (data) => {
         this.roles = Array.isArray(data) ? data : (data as any).content || [];
@@ -29,6 +31,13 @@ export class RoleListComponent implements OnInit {
       error: (err) => {
         console.error('Failed to load roles', err);
         this.isLoading = false;
+
+        // Handle 401 Unauthorized error
+        if (err.status === 401) {
+          this.errorMsg = 'Authentication required. Please login to view roles.';
+        } else {
+          this.errorMsg = 'Failed to load roles. Please try again.';
+        }
       }
     });
   }
@@ -39,7 +48,18 @@ export class RoleListComponent implements OnInit {
         next: () => {
           this.loadRoles();
         },
-        error: (err) => console.error('Failed to delete role', err)
+        error: (err) => {
+          console.error('Failed to delete role', err);
+          // Check if the error message indicates that the role is in use
+          if (err.error && typeof err.error === 'string' &&
+              (err.error.includes('Check if role is in use') ||
+               err.error.includes('has dependencies') ||
+               err.error.includes('Role masih dipakai oleh user'))) {
+            this.errorMsg = 'Role masih dipakai oleh user';
+          } else {
+            this.errorMsg = 'Failed to delete role. Please try again.';
+          }
+        }
       });
     }
   }

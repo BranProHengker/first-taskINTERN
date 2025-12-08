@@ -38,9 +38,17 @@ export interface Ticket {
   createDate?: string;
   createBy?: number;
   roleName?: string;
-  subject?: string; 
+  subject?: string;
   description?: string;
   capture?: string;
   latitude?: number;
   longitude?: number;
+  details?: TicketDetail[];
+}
+
+export interface TicketDetail {
+  id?: number;
+  serviceId: number;
+  serviceName?: string;
+  requestId?: number;
 }

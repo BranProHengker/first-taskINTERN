@@ -1,8 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { RoleService } from '../services/role.service';
-import { HttpErrorResponse } from '@angular/common/http';
+import { RequestService } from '../services/request.service';
 
 @Component({
   selector: 'app-role-list',
@@ -14,7 +13,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class RoleListComponent implements OnInit {
   roles: any[] = [];
   isLoading = true;
-  private roleService = inject(RoleService);
+  private requestService = inject(RequestService);
 
   ngOnInit() {
     this.loadRoles();
@@ -22,13 +21,17 @@ export class RoleListComponent implements OnInit {
 
   loadRoles() {
     this.isLoading = true;
-    this.roleService.getRoles().subscribe({
+    this.requestService.getRoles().subscribe({
       next: (data) => {
-        this.roles = data;
+        this.roles = Array.isArray(data) ? data : (data as any).content || [];
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Failed to load roles', err);
+        if (err.status !== 401) {
+          console.error('Failed to load roles', err);
+        } else {
+          console.warn('Load roles failed due to authentication error');
+        }
         this.isLoading = false;
       }
     });
@@ -36,26 +39,16 @@ export class RoleListComponent implements OnInit {
 
   deleteRole(id: number) {
     if (confirm('Are you sure you want to delete this role?')) {
-      console.log('[RoleList] Attempting to delete role with id:', id);
-      this.roleService.deleteRole(id).subscribe({
+      this.requestService.deleteRole(id).subscribe({
         next: () => {
-          console.log('Role deleted successfully');
           this.loadRoles();
         },
-        error: (err: any) => {
-          console.error('Delete error:', err);
-          console.error('Error status:', err.status);
-          console.error('Error body:', err.error);
-          
-          // Log detail error
-          if (err.status === 400) {
-            alert('Bad Request - Backend rejected delete. Check if role is in use or has dependencies.');
-          } else if (err.status === 401) {
-            alert('Unauthorized - Please login again');
-          } else if (err.status === 403) {
-            alert('Forbidden - You do not have permission to delete');
-          } else {
-            alert('Failed to delete role: ' + (err.message || 'Unknown error'));
+        error: (err) => {
+          console.error('Failed to delete role', err);
+          // Tambahkan alert khusus jika role tidak bisa dihapus karena masih digunakan
+          if (err && err.error && typeof err.error === 'string' &&
+              err.error.includes('Role masih dipakai oleh user')) {
+            alert('Role masih dipakai oleh user');
           }
         }
       });

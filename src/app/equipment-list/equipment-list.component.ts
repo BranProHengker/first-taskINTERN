@@ -45,6 +45,8 @@ export class EquipmentListComponent implements OnInit {
     this.searchTerm = target.value;
     const term = target.value.toLowerCase();
     this.filteredEquipments = this.equipments.filter(e =>
+      e.id?.toString().toLowerCase().includes(term) ||
+      e.equipment?.toString().toLowerCase().includes(term) ||
       e.modelName?.toLowerCase().includes(term) ||
       e.description?.toLowerCase().includes(term) ||
       e.location?.toLowerCase().includes(term)

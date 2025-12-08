@@ -60,14 +60,14 @@ export class UserFormComponent implements OnInit {
     this.requestService.getRoles().subscribe({
       next: (data) => {
         this.roles = Array.isArray(data) ? data : (data as any).content || [];
-        // Set a default role for new user creation if user is not in edit mode
-        if (!this.isEditMode && this.roles.length > 0) {
-          // Set default role (first role in the list as an example, or find 'User' role)
-          const defaultRole = this.roles.find(role => role.roleName === 'User') || this.roles[0];
-          if (defaultRole) {
-            this.user.roleId = defaultRole.id;
-            this.user.roleName = defaultRole.roleName;
-          }
+        // Don't set a default role - require explicit user selection for new users
+        if (!this.isEditMode) {
+          this.user.roleId = undefined;
+          this.user.roleName = undefined;
+          this.selectedRoleName = null;
+        } else if (this.roles.length > 0 && this.user.roleId) {
+          // For edit mode, update the role name based on selected roleId
+          this.updateUserRoleFromRoles(this.user as User);
         }
       },
       error: (err) => {
@@ -185,8 +185,8 @@ export class UserFormComponent implements OnInit {
       }
     }
 
-    if (this.user.roleId === undefined || this.user.roleId === null) {
-      this.fieldErrors.roleId = 'Please select a role';
+    if (!this.user.roleId || this.user.roleId <= 0) {
+      this.fieldErrors.roleId = 'Role is required.';
     }
 
     // Cek apakah ada error field

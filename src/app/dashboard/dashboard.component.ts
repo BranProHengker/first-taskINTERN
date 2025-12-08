@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../services/user.service';
 import { User } from '../models/user.model';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,7 +22,7 @@ export class DashboardComponent implements OnInit {
   searchTerm: string = '';
   isRoleDropdownOpen: boolean = false;
 
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService, private authService: AuthService) {}
 
   ngOnInit() {
     this.loadUsers();
@@ -139,7 +140,15 @@ export class DashboardComponent implements OnInit {
     if (confirm('Are you sure you want to delete this user?')) {
       this.userService.deleteUser(id).subscribe({
         next: () => {
-          this.loadUsers(); // Reload list
+          // Check if the deleted user is the current user
+          const currentUser = this.authService.getCurrentUser();
+          if (currentUser && currentUser.userId === id) {
+            // If admin deletes the current logged-in user, log them out automatically
+            alert('The account has been deleted. You will be logged out automatically.');
+            this.authService.logout();
+          } else {
+            this.loadUsers(); // Reload list for other users
+          }
         },
         error: (err) => console.error(err)
       });

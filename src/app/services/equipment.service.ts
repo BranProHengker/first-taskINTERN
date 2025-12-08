@@ -13,7 +13,6 @@ export class EquipmentService {
   getEquipments(): Observable<any[]> {
     return this.http.get<any[]>(this.baseUrl).pipe(
       tap({
-        next: (data) => console.log('EquipmentService: getEquipments success', data),
         error: (err) => console.error('EquipmentService: getEquipments failed', err)
       })
     );
@@ -22,7 +21,6 @@ export class EquipmentService {
   getEquipmentById(id: number): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/${id}`).pipe(
       tap({
-        next: (data) => console.log(`EquipmentService: getEquipmentById(${id}) success`, data),
         error: (err) => console.error(`EquipmentService: getEquipmentById(${id}) failed`, err)
       })
     );

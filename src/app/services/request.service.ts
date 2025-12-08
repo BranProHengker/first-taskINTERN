@@ -64,14 +64,13 @@ export class RequestService {
     // Force responseType: 'text' to bypass Angular's default JSON parser
     return this.http.get(this.baseUrl, { responseType: 'text' }).pipe(
       tap({
-        next: (res) => console.log('RequestService: getRequests raw success', res),
         error: (err) => console.error('RequestService: getRequests failed', err)
       }),
       map(response => {
         const parsedResponse = this.parseResponse(response);
         // Handle possible response wrapper
         const rawData = Array.isArray(parsedResponse) ? parsedResponse : (parsedResponse as any).content || [];
-        
+
         const tickets = rawData.map((item: any) => {
           const statusNum = Number(item.status);
           let statusStr = item.status;
@@ -94,26 +93,23 @@ export class RequestService {
             requestNo: item.requestNo,
             status: statusStr,
             note: item.note,
-            createDate: item.createdate || item.createDate, 
+            createDate: item.createdate || item.createDate,
             subject: item.requestNo || 'No Subject',
             description: item.description,
             createBy: item.createBy,
             roleName: item.roleName,
-            capture: item.capture || item.Capture, 
+            capture: item.capture || item.Capture,
             latitude: item.latitude,
             longitude: item.longitude
           };
         });
-        
+
         this.requestsCache = tickets;
         return tickets.sort((a: Ticket, b: Ticket) => {
           const dateA = a.createDate ? new Date(a.createDate).getTime() : 0;
           const dateB = b.createDate ? new Date(b.createDate).getTime() : 0;
           return dateB - dateA;
         });
-      }),
-      tap({
-        next: (data) => console.log('RequestService: getRequests parsed success', data)
       })
     );
   }
@@ -128,10 +124,56 @@ export class RequestService {
     );
   }
 
+  getRequestDirectById(id: number): Observable<Ticket> {
+    return this.http.get(`${this.baseUrl}/${id}`, { responseType: 'text' }).pipe(
+      tap({
+        error: (err) => console.error(`RequestService: getRequestDirectById(${id}) failed`, err)
+      }),
+      map(response => {
+        const parsed = this.parseResponse(response);
+
+        // Handle the case where the API returns a single object instead of an array
+        const item = parsed;
+
+        const statusNum = Number(item.status);
+        let statusStr = item.status;
+
+        if (!isNaN(statusNum) && item.status !== null && item.status !== '') {
+           switch(statusNum) {
+              case 1: statusStr = 'Open'; break;
+              case 2: statusStr = 'In Progress'; break;
+              case 3: statusStr = 'Reject'; break;
+              case 4: statusStr = 'Closed'; break;
+              default: statusStr = 'Open';
+           }
+        } else if (!item.status) {
+           statusStr = 'Open';
+        }
+
+        // Map the response to Ticket interface, including details if available
+        return {
+          id: item.id,
+          requestId: item.id,
+          requestNo: item.requestNo,
+          status: statusStr,
+          note: item.note,
+          createDate: item.createdate || item.createDate,
+          subject: item.requestNo || 'No Subject',
+          description: item.description,
+          createBy: item.createBy,
+          roleName: item.roleName,
+          capture: item.capture || item.Capture,
+          latitude: item.latitude,
+          longitude: item.longitude,
+          details: item.details || [] // Include details if available from the API response
+        };
+      })
+    );
+  }
+
   getRequestHistory(requestId: number): Observable<any> {
     return this.http.get(`http://192.168.5.200:60776/api/Request/history/${requestId}`, { responseType: 'text' }).pipe(
       tap({
-        next: (res) => console.log(`RequestService: getRequestHistory(${requestId}) raw success`, res),
         error: (err) => console.error(`RequestService: getRequestHistory(${requestId}) failed`, err)
       }),
       map(response => this.parseResponse(response))
@@ -142,7 +184,6 @@ export class RequestService {
     // Redundant but kept if needed, adding logs anyway
     return this.http.get('http://192.168.5.200:60776/api/Equipment', { responseType: 'text' }).pipe(
       tap({
-        next: (res) => console.log('RequestService: getEquipments raw success', res),
         error: (err) => console.error('RequestService: getEquipments failed', err)
       }),
       map(response => {
@@ -157,7 +198,6 @@ export class RequestService {
   getServices(): Observable<any[]> {
     return this.http.get('http://192.168.5.200:60776/api/Service?row=82', { responseType: 'text' }).pipe(
       tap({
-        next: (res) => console.log('RequestService: getServices raw success', res),
         error: (err) => console.error('RequestService: getServices failed', err)
       }),
       map(response => {
@@ -189,7 +229,6 @@ export class RequestService {
       responseType: 'text'
     }).pipe(
       tap({
-        next: (res) => console.log('RequestService: createRequest raw success', res),
         error: (err) => {
           console.error('RequestService: createRequest failed', err);
           // Log the error response body if available
@@ -205,7 +244,6 @@ export class RequestService {
   updateRequest(ticket: any): Observable<any> {
     return this.http.put(`http://192.168.5.200:60776/api/Request`, ticket, { responseType: 'text' }).pipe(
       tap({
-        next: (res) => console.log('RequestService: updateRequest raw success', res),
         error: (err) => console.error('RequestService: updateRequest failed', err)
       }),
       map(response => this.parseResponse(response))
@@ -217,12 +255,11 @@ export class RequestService {
       requestId: id,
       status: status.toString(),
       createDate: new Date().toISOString(),
-      note: '', 
+      note: '',
       createBy: 0
     };
     return this.http.post(`${this.baseUrl}/updateStatus`, payload, { responseType: 'text' }).pipe(
       tap({
-        next: (res) => console.log('RequestService: updateTicketStatus raw success', res),
         error: (err) => console.error('RequestService: updateTicketStatus failed', err)
       }),
       map(response => this.parseResponse(response))
@@ -239,7 +276,6 @@ export class RequestService {
     };
     return this.http.post(`${this.baseUrl}/updateStatus`, payload, { responseType: 'text' }).pipe(
       tap({
-        next: (res) => console.log('RequestService: addTicketNote raw success', res),
         error: (err) => console.error('RequestService: addTicketNote failed', err)
       }),
       map(response => this.parseResponse(response))
@@ -249,7 +285,6 @@ export class RequestService {
   deleteRequest(id: number): Observable<any> {
     return this.http.delete(`http://192.168.5.200:60776/api/Request/${id}`, { responseType: 'text' }).pipe(
       tap({
-        next: (res) => console.log(`RequestService: deleteRequest(${id}) raw success`, res),
         error: (err) => console.error(`RequestService: deleteRequest(${id}) failed`, err)
       }),
       map(response => this.parseResponse(response))
@@ -262,8 +297,13 @@ export class RequestService {
     // Using text response type for consistency and safety
     return this.http.get<any[]>(`http://192.168.5.200:60776/api/Role`, { responseType: 'text' as 'json' }).pipe(
       tap({
-        next: (res) => console.log('RequestService: getRoles raw success', res),
-        error: (err) => console.error('RequestService: getRoles failed', err)
+        error: (err) => {
+          if (err.status === 401) {
+            console.warn('RequestService: Authentication required for getRoles');
+          } else {
+            console.error('RequestService: getRoles failed', err);
+          }
+        }
       }),
       map(res => {
          const parsed = this.parseResponse(res);

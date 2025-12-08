@@ -14,11 +14,21 @@ export class UserService {
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(this.baseUrl).pipe(
       tap({
-        next: (data) => console.log('UserService: getUsers success', data),
-        error: (err) => console.error('UserService: getUsers failed', err)
+        error: (err) => {
+          if (err.status === 401) {
+            console.warn('UserService: Authentication required for getUsers');
+            // Redirect to login or handle unauthorized access
+          } else {
+            console.error('UserService: getUsers failed', err);
+          }
+        }
       }),
       catchError((err) => {
-        console.error('UserService: getUsers error details', err);
+        if (err.status === 401) {
+          console.warn('UserService: Returning empty list due to authentication failure');
+        } else {
+          console.error('UserService: getUsers error details', err);
+        }
         // Handle 401 or other errors gracefully to prevent app crash
         console.warn('UserService: returning empty list due to error');
         return of([]);

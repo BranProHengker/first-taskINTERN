@@ -30,7 +30,7 @@ export class TicketDetailComponent implements OnInit {
     // Get ID from params, support both string and number formats if needed
     const idParam = this.route.snapshot.paramMap.get('id');
     const id = idParam ? Number(idParam) : null;
-    
+
     if (id) {
       this.loadRequest(id);
     } else {
@@ -38,8 +38,9 @@ export class TicketDetailComponent implements OnInit {
       this.isLoading = false;
     }
   }
-
+  
   loadRequest(id: number) {
+    // Try to get request data, handling potential auth errors gracefully
     this.requestService.getRequestById(id).subscribe({
       next: (data) => {
         console.log('Request Data:', data);
@@ -51,7 +52,9 @@ export class TicketDetailComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error(err);
+        console.error('Request failed:', err);
+        // Set to null to show empty state, but page should still be visible
+        this.request = null;
         this.isLoading = false;
       }
     });
@@ -128,7 +131,7 @@ export class TicketDetailComponent implements OnInit {
   getStatusColor(status: string | undefined): string {
     switch (status?.toLowerCase()) {
       case 'open': return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'in progress': 
+      case 'in progress':
       case 'on progress': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
       case 'reject': return 'bg-red-500/10 text-red-400 border-red-500/20';
       case 'close':
@@ -136,4 +139,5 @@ export class TicketDetailComponent implements OnInit {
       default: return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
     }
   }
+
 }

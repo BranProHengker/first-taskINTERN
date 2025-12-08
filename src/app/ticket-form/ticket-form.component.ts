@@ -37,6 +37,8 @@ export class TicketFormComponent implements OnInit {
     equipmentId?: string;
     modelName?: string;
     note?: string;
+    services?: string;
+    capture?: string;
     // status will be commented as requested
   } = {};
   isEquipmentDropdownOpen = false;
@@ -168,6 +170,16 @@ export class TicketFormComponent implements OnInit {
 
     if (!this.ticket.note || this.ticket.note.trim() === '') {
       this.fieldErrors.note = 'Description/note is required.';
+    }
+
+    // Validate that at least one service is selected
+    if (!this.selectedServiceIds || this.selectedServiceIds.length === 0) {
+      this.fieldErrors.services = 'Service is required.';
+    }
+
+    // Validate that a capture file is required (only for new tickets, not for edits)
+    if (!this.isEditMode && !this.selectedFile) {
+      this.fieldErrors.capture = 'Attachment/Capture is required.';
     }
 
     // Cek apakah ada error field

@@ -63,7 +63,7 @@ export class EquipmentFormComponent implements OnInit {
     this.fieldErrors = {};
 
     // Validasi field-field wajib
-    if (!this.equipment.equipment) {
+    if (!this.equipment.equipment && this.equipment.equipment !== 0) {
       this.fieldErrors.equipmentNumber = 'Equipment Number is required';
     }
 
@@ -71,13 +71,17 @@ export class EquipmentFormComponent implements OnInit {
       this.fieldErrors.modelName = 'Model Name is required';
     }
 
-    // Validasi field location (opsional)
-    if (this.equipment.location && this.equipment.location.trim().length < 3) {
+    // Validasi field location (wajib)
+    if (!this.equipment.location?.trim()) {
+      this.fieldErrors.location = 'Location is required';
+    } else if (this.equipment.location.trim().length < 3) {
       this.fieldErrors.location = 'Location must be at least 3 characters long';
     }
 
-    // Validasi field description (opsional)
-    if (this.equipment.description && this.equipment.description.trim().length < 5) {
+    // Validasi field description (wajib)
+    if (!this.equipment.description?.trim()) {
+      this.fieldErrors.description = 'Description is required';
+    } else if (this.equipment.description.trim().length < 5) {
       this.fieldErrors.description = 'Description must be at least 5 characters long';
     }
 
