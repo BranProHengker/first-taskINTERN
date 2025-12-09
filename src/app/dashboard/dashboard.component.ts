@@ -123,8 +123,13 @@ export class DashboardComponent implements OnInit {
 
         // Check if it's an authentication error
         if (err.status === 401) {
-          // Redirect to login page
-          this.authService.logout(); // This will clear any invalid token and navigate to login
+          // Check if user is already logged in by checking token
+          if (this.authService.isLoggedIn()) {
+            // If we have a token but still get 401, the token might be expired
+            // Logout to clear the invalid token
+            this.authService.logout();
+          }
+          // If no token exists, don't force logout again
         } else {
           this.users = [];
           this.filteredUsers = [];

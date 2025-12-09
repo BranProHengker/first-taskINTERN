@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { RequestService } from '../services/request.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-role-list',
@@ -34,7 +35,16 @@ export class RoleListComponent implements OnInit {
 
         // Handle 401 Unauthorized error
         if (err.status === 401) {
-          this.errorMsg = 'Authentication required. Please login to view roles.';
+          // Check if user is already logged in by checking token
+          const authService = inject(AuthService);
+          if (authService.isLoggedIn()) {
+            // If we have a token but still get 401, the token might be expired
+            // Logout to clear the invalid token
+            authService.logout();
+          } else {
+            // User is not logged in, show auth required message
+            this.errorMsg = 'Authentication required. Please login to view roles.';
+          }
         } else {
           this.errorMsg = 'Failed to load roles. Please try again.';
         }

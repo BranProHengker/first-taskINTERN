@@ -1,1 +1,127 @@
-/* Local styles removed to use global theme from styles.css */
+/* Animasi untuk tombol "New Equipment" */
+.btn-primary {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(215, 35, 35, 0.5);
+  background: linear-gradient(45deg, #d72323, #ff6b6b);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px 0 rgba(215, 35, 35, 0.39);
+}
+
+/* Efek hover untuk ikon dalam tombol */
+.btn-primary:hover svg {
+  transform: scale(1.1);
+  transition: transform 0.3s ease;
+}
+
+/* Animasi untuk baris tabel */
+tr {
+  transition: all 0.3s ease;
+}
+
+tr:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  transform: scale(1.01);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+
+/* Animasi untuk card daftar equipment */
+.glass-panel {
+  animation: tableFadeIn 0.8s ease-out;
+  transition: opacity 0.5s ease-in-out;
+}
+
+@keyframes tableFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Animasi untuk background blobs */
+@keyframes float {
+  0% {
+    transform: translateY(0px) translateZ(20px);
+  }
+  50% {
+    transform: translateY(-20px) translateZ(20px);
+  }
+  100% {
+    transform: translateY(0px) translateZ(20px);
+  }
+}
+
+@keyframes float-opposite {
+  0% {
+    transform: translateY(0px) translateZ(10px);
+  }
+  50% {
+    transform: translateY(20px) translateZ(10px);
+  }
+  100% {
+    transform: translateY(0px) translateZ(10px);
+  }
+}
+
+/* Efek parallax saat menggerakkan mouse */
+.parallax-container {
+  transform-style: preserve-3d;
+  overflow: hidden;
+}
+
+.background-blob-1 {
+  animation: float 8s ease-in-out infinite;
+  transform: translateZ(20px);
+}
+
+.background-blob-2 {
+  animation: float-opposite 10s ease-in-out infinite;
+  transform: translateZ(10px);
+}
+
+/* Animasi untuk tombol aksi di tabel */
+button,
+a[href] {
+  transition: all 0.3s ease;
+}
+
+button:hover,
+a[href]:hover {
+  transform: scale(1.05);
+}
+
+/* Animasi untuk input search */
+.input-field {
+  transition: all 0.3s ease;
+}
+
+.input-field:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(215, 35, 35, 0.2);
+}
+
+/* Animasi untuk tombol pagination */
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  transition: all 0.3s ease;
+}
+
+button:not([disabled]):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
