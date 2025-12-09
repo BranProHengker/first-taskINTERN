@@ -49,6 +49,6 @@ export interface Ticket {
 export interface TicketDetail {
   id?: number;
   serviceId: number;
-  serviceName?: string;
+  service: string;
   requestId?: number;
 }

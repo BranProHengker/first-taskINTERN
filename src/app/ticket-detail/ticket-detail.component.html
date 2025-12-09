@@ -88,7 +88,7 @@
                           <span
                             *ngFor="let detail of request.details; let i = index"
                             class="px-2.5 py-1 rounded-full text-xs font-medium bg-white/10 border border-white/20 text-white inline-block">
-                            {{ detail.serviceName || 'Service ' + detail.serviceId }}
+                            {{ detail.service || 'Service ' + detail.serviceId }}
                           </span>
                        </div>
                        <div *ngIf="!request || !request.details || request.details.length === 0">
