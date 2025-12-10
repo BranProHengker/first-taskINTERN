@@ -9,68 +9,25 @@ import { environment } from '../../environments/environment';
 })
 export class RequestService {
   private baseUrl = `${environment.apiUrl}/api/Request`;
-  
+
   // Cache to support getById if endpoint doesn't support it
   private requestsCache: Ticket[] = [];
-  
+
   private httpNoInterceptor: HttpClient;
 
   constructor(private http: HttpClient, handler: HttpBackend) {
     this.httpNoInterceptor = new HttpClient(handler);
   }
 
-  /**
-   * Robust parsing helper.
-   * Handles:
-   * 1. Already parsed objects (if interceptor did it)
-   * 2. JSON strings
-   * 3. Double-encoded JSON strings
-   * 4. BOM characters
-   * 5. Plain text responses (treats as success if status is OK)
-   */
-  private parseResponse(response: any): any {
-    // If response is already an object (and not null), return it
-    if (response && typeof response === 'object') {
-      return response;
-    }
-
-    if (typeof response === 'string') {
-      const clean = response.replace(/^\uFEFF/gm, "").trim();
-      if (!clean) return null;
-
-      try {
-        let parsed = JSON.parse(clean);
-        
-        // Check for double encoding (if result is still a string that looks like JSON)
-        if (typeof parsed === 'string' && (parsed.startsWith('{') || parsed.startsWith('['))) {
-          try {
-            parsed = JSON.parse(parsed);
-          } catch (e) {
-            // If second parse fails, keep first result
-          }
-        }
-        return parsed;
-      } catch (e) {
-        // If manual parsing fails, it might be a plain text success message (e.g. "Success", "Deleted")
-        // Log warning but return the text instead of breaking
-        console.warn('Manual JSON parse failed. Treat as plain text.', e);
-        return { success: true, message: clean, raw: clean };
-      }
-    }
-    
-    return response;
-  }
 
   getRequests(): Observable<Ticket[]> {
-    // Force responseType: 'text' to bypass Angular's default JSON parser
-    return this.http.get(this.baseUrl, { responseType: 'text' }).pipe(
+    return this.http.get<Ticket[]>(this.baseUrl).pipe(
       tap({
         error: (err) => console.error('RequestService: getRequests failed', err)
       }),
       map(response => {
-        const parsedResponse = this.parseResponse(response);
         // Handle possible response wrapper
-        const rawData = Array.isArray(parsedResponse) ? parsedResponse : (parsedResponse as any).content || [];
+        const rawData = Array.isArray(response) ? response : (response as any).content || [];
 
         const tickets = rawData.map((item: any) => {
           const statusNum = Number(item.status);
@@ -127,15 +84,13 @@ export class RequestService {
   }
 
   getRequestDirectById(id: number): Observable<Ticket> {
-    return this.http.get(`${this.baseUrl}/${id}`, { responseType: 'text' }).pipe(
+    return this.http.get<Ticket>(`${this.baseUrl}/${id}`).pipe(
       tap({
         error: (err) => console.error(`RequestService: getRequestDirectById(${id}) failed`, err)
       }),
       map(response => {
-        const parsed = this.parseResponse(response);
-
         // Handle the case where the API returns a single object instead of an array
-        const item = parsed;
+        const item = response;
 
         const statusNum = Number(item.status);
         let statusStr = item.status;
@@ -159,12 +114,12 @@ export class RequestService {
           requestNo: item.requestNo,
           status: statusStr,
           note: item.note,
-          createDate: item.createdate || item.createDate,
+          createDate: item.createDate || item.createDate,
           subject: item.requestNo || 'No Subject',
           description: item.description,
           createBy: item.createBy,
           roleName: item.roleName,
-          capture: item.capture || item.Capture,
+          capture: item.capture || item.capture,
           latitude: item.latitude,
           longitude: item.longitude,
           details: item.details || [] // Include details if available from the API response
@@ -174,23 +129,20 @@ export class RequestService {
   }
 
   getRequestHistory(requestId: number): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/api/Request/history/${requestId}`, { responseType: 'text' }).pipe(
+    return this.http.get(`${environment.apiUrl}/api/Request/history/${requestId}`).pipe(
       tap({
         error: (err) => console.error(`RequestService: getRequestHistory(${requestId}) failed`, err)
-      }),
-      map(response => this.parseResponse(response))
+      })
     );
   }
 
   getEquipments(): Observable<any[]> {
-    // Redundant but kept if needed, adding logs anyway
-    return this.http.get(`${environment.apiUrl}/api/Equipment`, { responseType: 'text' }).pipe(
+    return this.http.get<any[]>(`${environment.apiUrl}/api/Equipment`).pipe(
       tap({
         error: (err) => console.error('RequestService: getEquipments failed', err)
       }),
       map(response => {
-        const parsed = this.parseResponse(response);
-        return Array.isArray(parsed) ? parsed : (parsed as any).content || [];
+        return Array.isArray(response) ? response : (response as any).content || [];
       })
     );
   }
@@ -198,13 +150,12 @@ export class RequestService {
   // getEquipmentById, createEquipment, updateEquipment, deleteEquipment removed in favor of EquipmentService
 
   getServices(): Observable<any[]> {
-    return this.http.get(`${environment.apiUrl}/api/Service?row=82`, { responseType: 'text' }).pipe(
+    return this.http.get<any[]>(`${environment.apiUrl}/api/Service?row=82`).pipe(
       tap({
         error: (err) => console.error('RequestService: getServices failed', err)
       }),
       map(response => {
-        const parsed = this.parseResponse(response);
-        const rawData = Array.isArray(parsed) ? parsed : (parsed as any).content || [];
+        const rawData = Array.isArray(response) ? response : (response as any).content || [];
         return rawData.map((item: any) => ({
           id: item.id,
           serviceName: item.service || item.serviceName
@@ -227,9 +178,7 @@ export class RequestService {
   createRequest(ticketData: any): Observable<any> {
     // Return regular post without observing full response to match original setup
     // but keep enhanced error handling
-    return this.http.post(this.baseUrl, ticketData, {
-      responseType: 'text'
-    }).pipe(
+    return this.http.post(this.baseUrl, ticketData).pipe(
       tap({
         error: (err) => {
           console.error('RequestService: createRequest failed', err);
@@ -238,33 +187,31 @@ export class RequestService {
             console.error('Error response body:', err.error);
           }
         }
-      }),
-      map(response => this.parseResponse(response))
+      })
     );
   }
 
   updateRequest(ticket: any): Observable<any> {
-    return this.http.put(`${environment.apiUrl}/api/Request`, ticket, { responseType: 'text' }).pipe(
+    return this.http.put(`${environment.apiUrl}/api/Request`, ticket).pipe(
       tap({
         error: (err) => console.error('RequestService: updateRequest failed', err)
-      }),
-      map(response => this.parseResponse(response))
+      })
     );
   }
 
   updateTicketStatus(id: number, status: number): Observable<any> {
     const payload = {
       requestId: id,
-      status: status.toString(),
-      createDate: new Date().toISOString(),
-      note: '',
-      createBy: 0
+      status: status,
+      note: '', // Default empty note
+      createBy: 0 // Default value
     };
-    return this.http.post(`${this.baseUrl}/updateStatus`, payload, { responseType: 'text' }).pipe(
+    console.log('RequestService: updateTicketStatus payload', payload);
+    return this.http.post(`${this.baseUrl}/updateStatus`, payload).pipe(
       tap({
+        next: (res) => console.log('RequestService: updateTicketStatus success', res),
         error: (err) => console.error('RequestService: updateTicketStatus failed', err)
-      }),
-      map(response => this.parseResponse(response))
+      })
     );
   }
 
@@ -276,28 +223,34 @@ export class RequestService {
       createDate: new Date().toISOString(),
       createBy: 0
     };
-    return this.http.post(`${this.baseUrl}/updateStatus`, payload, { responseType: 'text' }).pipe(
+    return this.http.post(`${this.baseUrl}/updateStatus`, payload).pipe(
       tap({
         error: (err) => console.error('RequestService: addTicketNote failed', err)
-      }),
-      map(response => this.parseResponse(response))
+      })
     );
   }
 
   deleteRequest(id: number): Observable<any> {
-    return this.http.delete(`http://192.168.5.200:60776/api/Request/${id}`, { responseType: 'text' }).pipe(
-      tap({
-        error: (err) => console.error(`RequestService: deleteRequest(${id}) failed`, err)
+    return this.http.delete(`http://192.168.5.200:60776/api/Request/${id}`, {
+      // Don't expect JSON response which might cause parsing errors
+      observe: 'response',
+      responseType: 'text'
+    }).pipe(
+      map(response => {
+        // Return a simple success indicator
+        return { success: true, status: response.status };
       }),
-      map(response => this.parseResponse(response))
+      tap({
+        next: (res) => console.log(`RequestService: deleteRequest(${id}) success`, res),
+        error: (err) => console.error(`RequestService: deleteRequest(${id}) failed`, err)
+      })
     );
   }
 
   // --- Role CRUD ---
 
   getRoles(): Observable<any[]> {
-    // Using text response type for consistency and safety
-    return this.http.get<any[]>(`http://192.168.5.200:60776/api/Role`, { responseType: 'text' as 'json' }).pipe(
+    return this.http.get<any[]>(`http://192.168.5.200:60776/api/Role`).pipe(
       tap({
         error: (err) => {
           if (err.status === 401) {
@@ -308,49 +261,44 @@ export class RequestService {
         }
       }),
       map(res => {
-         const parsed = this.parseResponse(res);
-         return Array.isArray(parsed) ? parsed : (parsed as any).content || [];
+         return Array.isArray(res) ? res : (res as any).content || [];
       })
     );
   }
 
   getRoleById(id: number): Observable<any> {
-    return this.http.get(`http://192.168.5.200:60776/api/Role/${id}`, { responseType: 'text' }).pipe(
+    return this.http.get(`http://192.168.5.200:60776/api/Role/${id}`).pipe(
         tap({
           next: (res) => console.log(`RequestService: getRoleById(${id}) raw success`, res),
           error: (err) => console.error(`RequestService: getRoleById(${id}) failed`, err)
-        }),
-        map(res => this.parseResponse(res))
+        })
     );
   }
 
   createRole(role: any): Observable<any> {
-    return this.http.post('http://192.168.5.200:60776/api/Role', role, { responseType: 'text' }).pipe(
+    return this.http.post('http://192.168.5.200:60776/api/Role', role).pipe(
         tap({
           next: (res) => console.log('RequestService: createRole raw success', res),
           error: (err) => console.error('RequestService: createRole failed', err)
-        }),
-        map(res => this.parseResponse(res))
+        })
     );
   }
 
   updateRole(role: any): Observable<any> {
-    return this.http.put('http://192.168.5.200:60776/api/Role', role, { responseType: 'text' }).pipe(
+    return this.http.put('http://192.168.5.200:60776/api/Role', role).pipe(
         tap({
           next: (res) => console.log('RequestService: updateRole raw success', res),
           error: (err) => console.error('RequestService: updateRole failed', err)
-        }),
-        map(res => this.parseResponse(res))
+        })
     );
   }
 
   deleteRole(id: number): Observable<any> {
-    return this.http.delete(`http://192.168.5.200:60776/api/Role/${id}`, { responseType: 'text' }).pipe(
+    return this.http.delete(`http://192.168.5.200:60776/api/Role/${id}`).pipe(
         tap({
           next: (res) => console.log(`RequestService: deleteRole(${id}) raw success`, res),
           error: (err) => console.error(`RequestService: deleteRole(${id}) failed`, err)
-        }),
-        map(res => this.parseResponse(res))
+        })
     );
   }
 }

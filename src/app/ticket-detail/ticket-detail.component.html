@@ -21,7 +21,7 @@
                <h2 class="text-2xl font-bold text-white tracking-tight">request Overview</h2>
             </div>
          </div>
-         
+
          <!-- <div class="flex gap-3" *ngIf="request">
             <span class="px-4 py-2 rounded-lg bg-white/5 border border-white/5 text-gray-400 text-sm font-mono shadow-md">ID: #{{ request.id }}</span>
          </div> -->
@@ -35,21 +35,21 @@
         <p class="text-gray-400 animate-pulse text-sm">Loading details...</p>
       </div>
 
-      <div *ngIf="!isLoading && request" class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto w-full">
+      <div *ngIf="!isLoading && request" class="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-7xl mx-auto w-full">
         <!-- Main Content -->
-        <div class="lg:col-span-2 space-y-6">
-          
+        <div class="lg:col-span-3 space-y-6">
+
           <!-- request Card -->
           <div class="glass-panel rounded-2xl shadow-2xl overflow-hidden">
             <!-- Header -->
             <div class="p-8 border-b border-white/5 bg-white/0.02">
-               <div class="flex justify-between items-start gap-4 mb-4">
+               <div class="flex justify-between items-start gap-4">
                   <h3 class="text-2xl font-bold text-white leading-snug">Request NO: #{{ request.subject || 'No Subject' }}</h3>
                   <span [class]="'shrink-0 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ' + getStatusColor(request.status)">
                     {{ request.status }}
                   </span>
                </div>
-               
+
                <div class="flex items-center gap-6 text-sm text-gray-400">
                   <div class="flex items-center gap-2">
                      <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -62,7 +62,7 @@
             <div class="p-8 space-y-8">
                <!-- Data Grid (Detail List) -->
                <div class="flex justify-center w-full">
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-white/5 rounded-xl border border-white/5 w-full max-w-4xl">
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 bg-white/5 rounded-xl border border-white/5 w-full max-w-6xl">
                     <!-- <div>
                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Request No</span>
                        <span class="text-white font-mono font-medium">{{ request.requestNo || '-' }}</span>
@@ -97,12 +97,12 @@
                     </div>
                  </div>
                </div>
-               
+
                <!-- Description -->
                <div>
                   <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Description / Note</h4>
                   <div class="prose prose-invert prose-p:text-gray-300 prose-p:leading-relaxed max-w-none bg-white/5 p-6 rounded-xl border border-white/5">
-                    <p>{{ request.description || request.note || 'No description provided.' }}</p>
+                    <p class="text-base">{{ request.description || request.note || 'No description provided.' }}</p>
                   </div>
                </div>
 
@@ -122,7 +122,7 @@
 
                      <!-- Image -->
                      <img *ngIf="imageBlobUrl" class="max-w-full h-auto rounded-lg shadow-lg" [src]="imageBlobUrl" alt="Request Capture">
-                     
+
                      <div class="mt-2 text-xs text-gray-500 break-all">
                         Filename: {{ request.capture }}
                      </div>
@@ -130,7 +130,7 @@
                </div>
 
                <!-- Location if available -->
-               <div *ngIf="request.latitude && request.longitude" class="grid grid-cols-2 gap-4">
+               <div *ngIf="request.latitude && request.longitude" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div class="p-4 bg-white/5 rounded-xl border border-white/5">
                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Latitude</h4>
                     <p class="font-mono text-white text-lg">{{ request.latitude }}</p>
@@ -165,21 +165,19 @@
           </div> -->
 
           <!-- Actions -->
-          <div class="glass-panel rounded-2xl shadow-xl p-6">
+          <!-- <div class="glass-panel rounded-2xl shadow-xl p-6 sticky top-6">
             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Actions</h4>
             <div class="space-y-3">
-              
-              <!-- Status Dropdown -->
+          
               <div class="relative">
-                 <button 
+                 <button
                   (click)="isStatusDropdownOpen = !isStatusDropdownOpen"
                   class="w-full py-2.5 px-4 rounded-lg text-white text-sm font-semibold shadow-lg flex items-center justify-center gap-2 transition transform hover:-translate-y-0.5" style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 rgba(215, 35, 35, 0.39)">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     Change Status
                     <svg class="w-4 h-4 ml-auto transition-transform duration-200" [class.rotate-180]="isStatusDropdownOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                  </button>
-                 
-                 <!-- Dropdown Menu -->
+
                  <div *ngIf="isStatusDropdownOpen" class="absolute left-0 right-0 top-full mt-2 rounded-xl bg-[#1E1E2E] border border-white/10 shadow-2xl overflow-hidden z-50">
                     <button (click)="updateStatus('Open')" class="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition flex items-center gap-2">
                        <span class="w-2 h-2 rounded-full bg-green-400"></span> Open
@@ -196,8 +194,7 @@
                  </div>
               </div>
           </div>
-        </div>
+        </div> -->
       </div>
   </div>
 </div>
-   

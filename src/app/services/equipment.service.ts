@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
 @Injectable({
@@ -26,8 +26,16 @@ export class EquipmentService {
     );
   }
 
-  createEquipment(equipment: any): Observable<string> {
-    return this.http.post(this.baseUrl, equipment, { responseType: 'text' }).pipe(
+  createEquipment(equipment: any): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post(this.baseUrl, equipment, {
+      headers,
+      observe: 'response',
+      responseType: 'text' // Handle text response to prevent parsing errors
+    }).pipe(
       tap({
         next: (res) => console.log('EquipmentService: createEquipment success', res),
         error: (err) => console.error('EquipmentService: createEquipment failed', err)
@@ -35,8 +43,16 @@ export class EquipmentService {
     );
   }
 
-  updateEquipment(equipment: any): Observable<string> {
-    return this.http.put(this.baseUrl, equipment, { responseType: 'text' }).pipe(
+  updateEquipment(equipment: any): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.put(this.baseUrl, equipment, {
+      headers,
+      observe: 'response',
+      responseType: 'text' // Handle text response to prevent parsing errors
+    }).pipe(
       tap({
         next: (res) => console.log('EquipmentService: updateEquipment success', res),
         error: (err) => console.error('EquipmentService: updateEquipment failed', err)
@@ -44,8 +60,11 @@ export class EquipmentService {
     );
   }
 
-  deleteEquipment(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`, { responseType: 'text' as 'json' }).pipe(
+  deleteEquipment(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${id}`, {
+      observe: 'response',
+      responseType: 'text' // Handle text response to prevent parsing errors
+    }).pipe(
       tap({
         next: () => console.log(`EquipmentService: deleteEquipment(${id}) success`),
         error: (err) => console.error(`EquipmentService: deleteEquipment(${id}) failed`, err)

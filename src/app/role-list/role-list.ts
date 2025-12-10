@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { RequestService } from '../services/request.service';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-role-list',
@@ -14,25 +15,36 @@ export class RoleListComponent implements OnInit {
   roles: any[] = [];
   isLoading = true;
   private requestService = inject(RequestService);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     this.loadRoles();
   }
 
   loadRoles() {
+    console.log('RoleList: Starting to load roles...');
     this.isLoading = true;
+    // Ensure change detection runs before showing loading state
+    this.cdr.detectChanges();
+
     this.requestService.getRoles().subscribe({
       next: (data) => {
+        console.log('RoleList: Received role data:', data);
         this.roles = Array.isArray(data) ? data : (data as any).content || [];
         this.isLoading = false;
+        console.log('RoleList: Data loaded, roles:', this.roles.length);
+        // Trigger change detection to ensure the UI updates
+        this.cdr.detectChanges();
       },
       error: (err) => {
         if (err.status !== 401) {
-          console.error('Failed to load roles', err);
+          console.error('RoleList: Failed to load roles', err);
         } else {
-          console.warn('Load roles failed due to authentication error');
+          console.warn('RoleList: Load roles failed due to authentication error');
         }
         this.isLoading = false;
+        // Trigger change detection to ensure the UI updates
+        this.cdr.detectChanges();
       }
     });
   }
@@ -50,6 +62,8 @@ export class RoleListComponent implements OnInit {
               err.error.includes('Role masih dipakai oleh user')) {
             alert('Role masih dipakai oleh user');
           }
+          // Trigger change detection to ensure UI updates in case of error
+          this.cdr.detectChanges();
         }
       });
     }

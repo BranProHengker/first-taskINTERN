@@ -13,26 +13,42 @@ export class UserService {
   private baseUrl = environment.apiUrl;
 
   getUsers(): Observable<User[]> {
-    return this.http.get(`${this.baseUrl}/api/User`, {
-      responseType: 'text' // Handle text response to prevent parsing errors
-    }).pipe(
+    return this.http.get<User[]>(`${this.baseUrl}/api/User`).pipe(
       map(response => {
-        const parsedResponse = this.parseResponse(response);
         // Handle possible response wrapper
-        return Array.isArray(parsedResponse) ? parsedResponse : (parsedResponse as any).content || [];
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response && Array.isArray((response as any).content)) {
+          return (response as any).content;
+        } else if (response && typeof response === 'object') {
+          // Check for common wrapper properties
+          if ((response as any).data && Array.isArray((response as any).data)) {
+            return (response as any).data;
+          } else if ((response as any).content && Array.isArray((response as any).content)) {
+            return (response as any).content;
+          } else if ((response as any).users && Array.isArray((response as any).users)) {
+            return (response as any).users;
+          } else if ((response as any).result && Array.isArray((response as any).result)) {
+            return (response as any).result;
+          } else {
+            // Try to find any array property in the object
+            const arrayProps = Object.keys(response).filter(key => Array.isArray((response as any)[key]));
+            if (arrayProps.length > 0) {
+              const firstArrayProp = arrayProps[0];
+              return (response as any)[firstArrayProp];
+            } else {
+              return [];
+            }
+          }
+        } else {
+          return [];
+        }
       })
     );
   }
 
   getUserById(id: number): Observable<User> {
-    return this.http.get(`${this.baseUrl}/api/User/${id}`, {
-      responseType: 'text' // Handle text response to prevent parsing errors
-    }).pipe(
-      map(response => {
-        const parsedResponse = this.parseResponse(response);
-        return parsedResponse;
-      })
-    );
+    return this.http.get<User>(`${this.baseUrl}/api/User/${id}`);
   }
 
   createUser(user: Partial<User>): Observable<any> {
@@ -40,44 +56,7 @@ export class UserService {
       'Content-Type': 'application/json'
     });
 
-    return this.http.post(`${this.baseUrl}/api/User`, user, {
-      headers,
-      responseType: 'text' // Handle text response to prevent parsing errors
-    }).pipe(
-      map(response => this.parseResponse(response))
-    );
-  }
-
-  private parseResponse(response: any): any {
-    // If response is already an object (and not null), return it
-    if (response && typeof response === 'object') {
-      return response;
-    }
-
-    if (typeof response === 'string') {
-      const clean = response.replace(/^\uFEFF/gm, "").trim();
-      if (!clean) return null;
-
-      try {
-        let parsed = JSON.parse(clean);
-
-        // Check for double encoding (if result is still a string that looks like JSON)
-        if (typeof parsed === 'string' && (parsed.startsWith('{') || parsed.startsWith('['))) {
-          try {
-            parsed = JSON.parse(parsed);
-          } catch (e) {
-            // If second parse fails, keep first result
-          }
-        }
-        return parsed;
-      } catch (e) {
-        // If manual parsing fails, it might be a plain text success message (e.g. "Success", "Created")
-        // Return the text instead of breaking
-        return { success: true, message: clean, raw: clean };
-      }
-    }
-
-    return response;
+    return this.http.post(`${this.baseUrl}/api/User`, user, { headers });
   }
 
   updateUser(user: Partial<User> & { id: number }): Observable<any> {
@@ -85,24 +64,31 @@ export class UserService {
       'Content-Type': 'application/json'
     });
 
-    return this.http.put(`${this.baseUrl}/api/User/${user.id}`, user, {
+    // Use POST to base endpoint with ID in the body - common pattern when API doesn't support PUT/PATCH
+    // The API likely determines whether to create or update based on the presence of an ID in the data
+    const userData = { ...user, id: user.id };
+    return this.http.put(`${this.baseUrl}/api/User`, userData, {
       headers,
-      responseType: 'text' // Handle text response to prevent parsing errors
+      observe: 'response',
+      responseType: 'text'
     }).pipe(
-      map(response => this.parseResponse(response))
+      map(response => {
+        // Return a simple success indicator
+        return { success: true, status: response.status };
+      })
     );
   }
 
   deleteUser(id: number): Observable<any> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
-
     return this.http.delete(`${this.baseUrl}/api/User/${id}`, {
-      headers,
-      responseType: 'text' // Handle text response to prevent parsing errors
+      // Don't expect JSON response which might cause parsing errors
+      observe: 'response',
+      responseType: 'text'
     }).pipe(
-      map(response => this.parseResponse(response))
+      map(response => {
+        // Return a simple success indicator
+        return { success: true, status: response.status };
+      })
     );
   }
 
@@ -116,11 +102,6 @@ export class UserService {
       newPassword: newPassword
     };
 
-    return this.http.post(`${this.baseUrl}/api/User/ChangePassword`, body, {
-      headers,
-      responseType: 'text' // Handle text response to prevent parsing errors
-    }).pipe(
-      map(response => this.parseResponse(response))
-    );
+    return this.http.post(`${this.baseUrl}/api/User/ChangePassword`, body, { headers });
   }
 }

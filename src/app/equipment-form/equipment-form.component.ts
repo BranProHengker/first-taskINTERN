@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { EquipmentService } from '../services/equipment.service';
 import { Equipment } from '../models/equipment.model';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-equipment-form',
@@ -32,6 +33,7 @@ export class EquipmentFormComponent implements OnInit {
   private equipmentService = inject(EquipmentService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -47,11 +49,13 @@ export class EquipmentFormComponent implements OnInit {
       next: (data) => {
         this.equipment = data;
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Failed to load equipment', err);
         this.errorMsg = 'Failed to load equipment details.';
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -89,6 +93,7 @@ export class EquipmentFormComponent implements OnInit {
     const hasFieldErrors = Object.values(this.fieldErrors).some(error => error);
     if (hasFieldErrors) {
       this.isLoading = false;
+      this.cdr.detectChanges();
       return;
     }
 
@@ -96,24 +101,28 @@ export class EquipmentFormComponent implements OnInit {
       this.equipmentService.updateEquipment(this.equipment).subscribe({
         next: () => {
           this.isLoading = false;
+          this.cdr.detectChanges();
           this.router.navigate(['/equipments']);
         },
         error: (err) => {
           console.error('Error updating equipment', err);
           this.isLoading = false;
           this.errorMsg = 'Failed to update equipment. Please try again.';
+          this.cdr.detectChanges();
         }
       });
     } else {
       this.equipmentService.createEquipment(this.equipment).subscribe({
         next: () => {
           this.isLoading = false;
+          this.cdr.detectChanges();
           this.router.navigate(['/equipments']);
         },
         error: (err) => {
           console.error('Error creating equipment', err);
           this.isLoading = false;
           this.errorMsg = 'Failed to create equipment. Please try again.';
+          this.cdr.detectChanges();
         }
       });
     }

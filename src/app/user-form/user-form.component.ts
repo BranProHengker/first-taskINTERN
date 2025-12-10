@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { UserService } from '../services/user.service';
 import { RequestService } from '../services/request.service';
 import { User } from '../models/user.model';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-user-form',
@@ -43,8 +44,10 @@ export class UserFormComponent implements OnInit {
   private requestService = inject(RequestService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
+    console.log('UserForm: Initializing form...');
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;
@@ -69,10 +72,15 @@ export class UserFormComponent implements OnInit {
           // For edit mode, update the role name based on selected roleId
           this.updateUserRoleFromRoles(this.user as User);
         }
+
+        // Trigger change detection after roles are loaded
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Failed to load roles', err);
         this.errorMsg = 'Failed to load roles.';
+        // Trigger change detection after error
+        this.cdr.detectChanges();
       }
     });
   }
@@ -95,9 +103,14 @@ export class UserFormComponent implements OnInit {
   }
 
   loadUser(id: number) {
+    console.log('UserForm: Loading user data for id:', id);
     this.isLoading = true;
+    // Ensure change detection runs before showing loading state
+    this.cdr.detectChanges();
+
     this.userService.getUserById(id).subscribe({
       next: (found) => {
+        console.log('UserForm: User data received:', found);
         if (found) {
           this.user = { ...found };
           // Clear password for edit mode security
@@ -112,11 +125,16 @@ export class UserFormComponent implements OnInit {
           }
         }
         this.isLoading = false;
+        console.log('UserForm: Data loaded, user:', this.user.fullName);
+        // Trigger change detection to ensure the UI updates
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error(err);
+        console.error('UserForm: Failed to load user details', err);
         this.isLoading = false;
         this.errorMsg = 'Failed to load user details.';
+        // Trigger change detection to ensure the UI updates
+        this.cdr.detectChanges();
       }
     });
   }
@@ -193,6 +211,7 @@ export class UserFormComponent implements OnInit {
     const hasFieldErrors = Object.values(this.fieldErrors).some(error => error);
     if (hasFieldErrors) {
       this.isLoading = false;
+      this.cdr.detectChanges();
       return;
     }
 
@@ -201,14 +220,16 @@ export class UserFormComponent implements OnInit {
       : this.userService.createUser(this.user);
 
     request.subscribe({
-      next: (response) => {
+      next: (response: any) => {
         this.isLoading = false;
+        this.cdr.detectChanges();
         this.router.navigate(['/dashboard']);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error(err);
         this.isLoading = false;
         this.errorMsg = `Failed to ${this.isEditMode ? 'update' : 'create'} user.`;
+        this.cdr.detectChanges();
       }
     });
   }

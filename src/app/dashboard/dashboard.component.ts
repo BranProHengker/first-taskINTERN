@@ -1,10 +1,11 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../services/user.service';
 import { User } from '../models/user.model';
 import { AuthService } from '../services/auth.service';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,6 +22,8 @@ export class DashboardComponent implements OnInit {
   availableRoles: string[] = [];
   searchTerm: string = '';
   isRoleDropdownOpen: boolean = false;
+
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(private userService: UserService, private authService: AuthService) {}
 
@@ -48,11 +51,13 @@ export class DashboardComponent implements OnInit {
   }
 
   applyFilters(searchTerm: string = '') {
+    console.log('Dashboard: Applying filters, total users:', this.users.length, 'searchTerm:', searchTerm, 'selectedRole:', this.selectedRole);
     let filtered = [...this.users]; // Start with all users
 
     // Apply role filter if a role is selected
     if (this.selectedRole) {
       filtered = filtered.filter(user => user.roleName && user.roleName === this.selectedRole);
+      console.log('Dashboard: After role filter:', filtered.length);
     }
 
     // Apply search filter if a search term is provided
@@ -63,9 +68,14 @@ export class DashboardComponent implements OnInit {
         (user.companyName && user.companyName.toLowerCase().includes(searchTerm)) ||
         (user.roleName && user.roleName.toLowerCase().includes(searchTerm))
       );
+      console.log('Dashboard: After search filter:', filtered.length);
     }
 
     this.filteredUsers = filtered;
+    console.log('Dashboard: Final filtered users count:', this.filteredUsers.length);
+
+    // Trigger change detection after filtering to ensure UI updates
+    this.cdr.detectChanges();
   }
 
   toggleRoleDropdown() {
@@ -73,38 +83,14 @@ export class DashboardComponent implements OnInit {
   }
 
   loadUsers() {
-    this.userService.getUsers().subscribe({
-      next: (data: any) => {
-        // Handle possible response wrapper or direct array
-        let userData: User[] = [];
+    console.log('Dashboard: Starting to load users...');
+    this.isLoading = true;
+    // Ensure change detection runs before showing loading state
+    this.cdr.detectChanges();
 
-        if (Array.isArray(data)) {
-          userData = data;
-        } else if (data && Array.isArray(data.content)) {
-          userData = data.content;
-        } else if (data && typeof data === 'object') {
-          // Check for common wrapper properties
-          if (data.data && Array.isArray(data.data)) {
-            userData = data.data;
-          } else if (data.content && Array.isArray(data.content)) {
-            userData = data.content;
-          } else if (data.users && Array.isArray(data.users)) {
-            userData = data.users;
-          } else if (data.result && Array.isArray(data.result)) {
-            userData = data.result;
-          } else {
-            // Try to find any array property in the object
-            const arrayProps = Object.keys(data).filter(key => Array.isArray(data[key]));
-            if (arrayProps.length > 0) {
-              const firstArrayProp = arrayProps[0];
-              userData = data[firstArrayProp];
-            } else {
-              userData = [];
-            }
-          }
-        } else {
-          userData = [];
-        }
+    this.userService.getUsers().subscribe({
+      next: (userData: User[]) => {
+        console.log('Dashboard: Received user data:', userData);
 
         // Filter valid users and extract unique roles
         this.users = userData.filter(user => user && user.id !== undefined);
@@ -116,10 +102,18 @@ export class DashboardComponent implements OnInit {
         // Apply all filters
         this.applyFilters();
         this.isLoading = false;
+
+        console.log('Dashboard: Data loaded, users:', this.users.length, 'filtered:', this.filteredUsers.length);
+
+        // Trigger change detection to ensure the UI updates
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Error loading users:', err);
+        console.error('Dashboard: Error loading users:', err);
         this.isLoading = false;
+        this.users = [];
+        this.filteredUsers = [];
+        this.availableRoles = [];
 
         // Check if it's an authentication error
         if (err.status === 401) {
@@ -134,15 +128,10 @@ export class DashboardComponent implements OnInit {
             console.log('Received 401 with token present - may be expired');
             // Tidak langsung logout, hanya kosongkan data
           }
-          this.users = [];
-          this.filteredUsers = [];
-          this.availableRoles = [];
-        } else {
-          // For other errors, clear the data but don't logout
-          this.users = [];
-          this.filteredUsers = [];
-          this.availableRoles = [];
         }
+
+        // Trigger change detection to ensure the UI updates
+        this.cdr.detectChanges();
       }
     });
   }
@@ -167,10 +156,18 @@ export class DashboardComponent implements OnInit {
             alert('The account has been deleted. You will be logged out automatically.');
             this.authService.logout();
           } else {
-            this.loadUsers(); // Reload list for other users
+            // Remove the user from the local arrays immediately for better UX
+            this.users = this.users.filter(user => user.id !== id);
+            this.applyFilters(); // Reapply filters to update the filtered list
+            // Trigger change detection to update the UI immediately
+            this.cdr.detectChanges();
           }
         },
-        error: (err) => console.error(err)
+        error: (err) => {
+          console.error(err);
+          // Trigger change detection in case of error too
+          this.cdr.detectChanges();
+        }
       });
     }
   }
