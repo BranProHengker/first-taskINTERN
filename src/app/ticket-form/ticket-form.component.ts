@@ -48,6 +48,10 @@ export class TicketFormComponent implements OnInit {
   selectedFile: File | null = null;
   imagePreview: string | ArrayBuffer | null = null;
 
+  // Geolocation properties
+  isGettingLocation = false;
+  locationError: string | null = null;
+
   private requestService = inject(RequestService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -122,7 +126,14 @@ export class TicketFormComponent implements OnInit {
       next: (data) => {
         if (data) {
           this.ticket = { ...data };
-          // If editing, existing capture is a URL string, not a file. 
+          // Ensure latitude and longitude are set even if they're null/undefined
+          if (this.ticket.latitude === undefined || this.ticket.latitude === null) {
+            this.ticket.latitude = 0.0;
+          }
+          if (this.ticket.longitude === undefined || this.ticket.longitude === null) {
+            this.ticket.longitude = 0.0;
+          }
+          // If editing, existing capture is a URL string, not a file.
           // We can show it if needed, but imagePreview is for new file.
         }
         this.isLoading = false;
@@ -336,6 +347,49 @@ export class TicketFormComponent implements OnInit {
     if (!target.closest('.equipment-dropdown') && !target.closest('.services-dropdown')) {
       this.isEquipmentDropdownOpen = false;
       this.isServicesDropdownOpen = false;
+    }
+  }
+
+  // Geolocation methods
+  getLocation() {
+    this.isGettingLocation = true;
+    this.locationError = null;
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          this.ticket.latitude = position.coords.latitude;
+          this.ticket.longitude = position.coords.longitude;
+          this.isGettingLocation = false;
+          console.log('Location retrieved:', this.ticket.latitude, this.ticket.longitude);
+        },
+        (error) => {
+          this.isGettingLocation = false;
+          console.error('Geolocation error:', error);
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              this.locationError = "Location access denied by user.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              this.locationError = "Location information unavailable.";
+              break;
+            case error.TIMEOUT:
+              this.locationError = "Location request timed out.";
+              break;
+            default:
+              this.locationError = "An unknown error occurred.";
+              break;
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000, // 10 seconds
+          maximumAge: 60000 // 1 minute
+        }
+      );
+    } else {
+      this.isGettingLocation = false;
+      this.locationError = "Geolocation is not supported by this browser.";
     }
   }
 }

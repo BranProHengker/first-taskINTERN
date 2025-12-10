@@ -40,8 +40,8 @@ export class TicketDetailComponent implements OnInit {
   }
   
   loadRequest(id: number) {
-    // Try to get request data, handling potential auth errors gracefully
-    this.requestService.getRequestById(id).subscribe({
+    // Use direct API call to get full request data with details
+    this.requestService.getRequestDirectById(id).subscribe({
       next: (data) => {
         console.log('Request Data:', data);
         this.request = data || null;

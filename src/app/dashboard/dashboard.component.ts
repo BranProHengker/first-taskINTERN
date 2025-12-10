@@ -118,19 +118,27 @@ export class DashboardComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        console.error(err);
+        console.error('Error loading users:', err);
         this.isLoading = false;
 
         // Check if it's an authentication error
         if (err.status === 401) {
-          // Check if user is already logged in by checking token
-          if (this.authService.isLoggedIn()) {
-            // If we have a token but still get 401, the token might be expired
-            // Logout to clear the invalid token
-            this.authService.logout();
+          // Jangan logout otomatis hanya karena 401 saat refresh
+          // Kita hanya logout jika API jelas menolak token yang harusnya valid
+          // Tapi mungkin ada masalah dengan interceptor tidak berjalan dengan benar
+          // Jadi kita coba periksa apakah token masih valid
+          const token = localStorage.getItem('auth_token');
+          if (token) {
+            // Jika token ada tapi tetap dapat 401, mungkin token expired
+            // Tapi sebelum logout, kita coba sekali lagi nanti
+            console.log('Received 401 with token present - may be expired');
+            // Tidak langsung logout, hanya kosongkan data
           }
-          // If no token exists, don't force logout again
+          this.users = [];
+          this.filteredUsers = [];
+          this.availableRoles = [];
         } else {
+          // For other errors, clear the data but don't logout
           this.users = [];
           this.filteredUsers = [];
           this.availableRoles = [];

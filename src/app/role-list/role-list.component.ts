@@ -16,6 +16,7 @@ export class RoleListComponent implements OnInit {
   isLoading = true;
   errorMsg: string = '';
   private requestService = inject(RequestService);
+  private authService = inject(AuthService);
 
   ngOnInit() {
     this.loadRoles();
@@ -36,11 +37,10 @@ export class RoleListComponent implements OnInit {
         // Handle 401 Unauthorized error
         if (err.status === 401) {
           // Check if user is already logged in by checking token
-          const authService = inject(AuthService);
-          if (authService.isLoggedIn()) {
+          if (this.authService.isLoggedIn()) {
             // If we have a token but still get 401, the token might be expired
             // Logout to clear the invalid token
-            authService.logout();
+            this.authService.logout();
           } else {
             // User is not logged in, show auth required message
             this.errorMsg = 'Authentication required. Please login to view roles.';

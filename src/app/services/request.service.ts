@@ -99,6 +99,7 @@ export class RequestService {
             description: item.description,
             createBy: item.createBy,
             roleName: item.roleName,
+            service:item.serviceName,
             capture: item.capture || item.Capture,
             latitude: item.latitude,
             longitude: item.longitude
