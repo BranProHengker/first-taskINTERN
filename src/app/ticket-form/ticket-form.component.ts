@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -57,6 +57,7 @@ export class TicketFormComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private dataRefreshService = inject(DataRefreshService);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     this.loadEquipments();
@@ -72,8 +73,12 @@ export class TicketFormComponent implements OnInit {
     this.requestService.getEquipments().subscribe({
       next: (data) => {
         this.equipments = Array.isArray(data) ? data : (data as any).content || [];
+        this.cdr.detectChanges(); // Trigger change detection
       },
-      error: (err) => console.error('Failed to load equipments', err)
+      error: (err) => {
+        console.error('Failed to load equipments', err);
+        this.cdr.detectChanges(); // Trigger change detection
+      }
     });
   }
 
@@ -81,8 +86,12 @@ export class TicketFormComponent implements OnInit {
     this.requestService.getServices().subscribe({
       next: (data) => {
         this.services = Array.isArray(data) ? data : (data as any).content || [];
+        this.cdr.detectChanges(); // Trigger change detection
       },
-      error: (err) => console.error('Failed to load services', err)
+      error: (err) => {
+        console.error('Failed to load services', err);
+        this.cdr.detectChanges(); // Trigger change detection
+      }
     });
   }
 
@@ -92,6 +101,7 @@ export class TicketFormComponent implements OnInit {
       this.ticket.modelName = selected.modelName;
       this.selectedEquipmentName = selected.equipment ? selected.equipment + ' - ' + selected.modelName : selected.modelName;
     }
+    this.cdr.detectChanges(); // Trigger change detection
   }
 
   selectEquipment(equipmentId: number, equipmentName: string, modelName: string) {
@@ -100,6 +110,7 @@ export class TicketFormComponent implements OnInit {
     this.selectedEquipmentName = equipmentName ? equipmentName + ' - ' + modelName : modelName;
     this.isEquipmentDropdownOpen = false;
     this.onEquipmentChange();
+    this.cdr.detectChanges(); // Trigger change detection
   }
 
   toggleServiceSelection(serviceId: number) {
@@ -109,6 +120,7 @@ export class TicketFormComponent implements OnInit {
     } else {
       this.selectedServiceIds.push(serviceId);
     }
+    this.cdr.detectChanges(); // Trigger change detection
   }
 
   isSelectedService(serviceId: number): boolean {
@@ -124,6 +136,7 @@ export class TicketFormComponent implements OnInit {
 
   loadRequest(id: number) {
     this.isLoading = true;
+    this.cdr.detectChanges(); // Trigger change detection
     this.requestService.getRequestById(id).subscribe({
       next: (data) => {
         if (data) {
@@ -139,11 +152,13 @@ export class TicketFormComponent implements OnInit {
           // We can show it if needed, but imagePreview is for new file.
         }
         this.isLoading = false;
+        this.cdr.detectChanges(); // Trigger change detection
       },
       error: (err) => {
         console.error(err);
         this.isLoading = false;
         this.errorMsg = 'Failed to load ticket details.';
+        this.cdr.detectChanges(); // Trigger change detection
       }
     });
   }
@@ -152,18 +167,21 @@ export class TicketFormComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.selectedFile = input.files[0];
-      
+
       const reader = new FileReader();
       reader.onload = () => {
         this.imagePreview = reader.result;
+        this.cdr.detectChanges(); // Trigger change detection
       };
       reader.readAsDataURL(this.selectedFile);
+      this.cdr.detectChanges(); // Trigger change detection
     }
   }
 
   removeFile() {
     this.selectedFile = null;
     this.imagePreview = null;
+    this.cdr.detectChanges(); // Trigger change detection
   }
 
   onSubmit() {
@@ -199,6 +217,7 @@ export class TicketFormComponent implements OnInit {
     const hasFieldErrors = Object.values(this.fieldErrors).some(error => error);
     if (hasFieldErrors) {
       this.isLoading = false;
+      this.cdr.detectChanges(); // Trigger change detection
       return;
     }
 
@@ -208,12 +227,14 @@ export class TicketFormComponent implements OnInit {
           this.isLoading = false;
           // Trigger refresh in ticket-list component using the shared service
           this.dataRefreshService.triggerRefresh();
+          this.cdr.detectChanges(); // Trigger change detection
           this.router.navigate(['/ticket-list']);
         },
         error: (err) => {
           console.error(err);
           this.isLoading = false;
           this.errorMsg = 'Failed to update ticket.';
+          this.cdr.detectChanges(); // Trigger change detection
         }
       });
     } else {
@@ -255,6 +276,7 @@ export class TicketFormComponent implements OnInit {
         console.error('Invalid payload JSON:', e);
         this.errorMsg = 'Invalid ticket data format.';
         this.isLoading = false;
+        this.cdr.detectChanges(); // Trigger change detection
         return;
       }
 
@@ -268,6 +290,7 @@ export class TicketFormComponent implements OnInit {
         if (!allowedTypes.includes(this.selectedFile.type)) {
           this.errorMsg = 'Only image files (JPEG, PNG, GIF) are allowed.';
           this.isLoading = false;
+          this.cdr.detectChanges(); // Trigger change detection
           return;
         }
 
@@ -276,6 +299,7 @@ export class TicketFormComponent implements OnInit {
         if (this.selectedFile.size > maxSize) {
           this.errorMsg = 'File size exceeds 5MB limit.';
           this.isLoading = false;
+          this.cdr.detectChanges(); // Trigger change detection
           return;
         }
 
@@ -295,6 +319,7 @@ export class TicketFormComponent implements OnInit {
 
           // Trigger refresh in ticket-list component using the shared service
           this.dataRefreshService.triggerRefresh();
+          this.cdr.detectChanges(); // Trigger change detection
           this.router.navigate(['/ticket-list']);
         },
         error: (err) => {
@@ -316,7 +341,7 @@ export class TicketFormComponent implements OnInit {
                 if (parsedError.message) {
                   errorMessage = `Server error: ${parsedError.message}`;
                 } else if (parsedError.Message) {
-                  errorMessage = `Server error: ${parsedError.Message}`;
+                  errorMessage = `Server error: ${err.error.Message}`;
                 } else {
                   errorMessage = `Server error: ${err.error}`;
                 }
@@ -343,6 +368,7 @@ export class TicketFormComponent implements OnInit {
 
           this.errorMsg = errorMessage;
           console.error('Detailed error message:', errorMessage);
+          this.cdr.detectChanges(); // Trigger change detection
         }
       });
     }
@@ -361,6 +387,7 @@ export class TicketFormComponent implements OnInit {
   getLocation() {
     this.isGettingLocation = true;
     this.locationError = null;
+    this.cdr.detectChanges(); // Trigger change detection
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -369,6 +396,7 @@ export class TicketFormComponent implements OnInit {
           this.ticket.longitude = position.coords.longitude;
           this.isGettingLocation = false;
           console.log('Location retrieved:', this.ticket.latitude, this.ticket.longitude);
+          this.cdr.detectChanges(); // Trigger change detection
         },
         (error) => {
           this.isGettingLocation = false;
@@ -387,6 +415,7 @@ export class TicketFormComponent implements OnInit {
               this.locationError = "An unknown error occurred.";
               break;
           }
+          this.cdr.detectChanges(); // Trigger change detection
         },
         {
           enableHighAccuracy: true,
@@ -397,6 +426,7 @@ export class TicketFormComponent implements OnInit {
     } else {
       this.isGettingLocation = false;
       this.locationError = "Geolocation is not supported by this browser.";
+      this.cdr.detectChanges(); // Trigger change detection
     }
   }
 }

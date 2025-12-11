@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RoleService } from '../services/role.service';
 import { ChangeDetectorRef } from '@angular/core';
 import { first } from 'rxjs/operators';
+import { DataRefreshService } from '../services/data-refresh.service';
 
 @Component({
   selector: 'app-role-form',
@@ -27,6 +28,7 @@ export class RoleFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
+  private dataRefreshService = inject(DataRefreshService);
 
   ngOnInit() {
     console.log('RoleForm: Initializing form...');
@@ -107,6 +109,8 @@ export class RoleFormComponent implements OnInit {
           this.ngZone.run(() => {
             this.isLoading = false;
             this.cdr.detectChanges();
+            // Trigger refresh in role-list component using the shared service
+            this.dataRefreshService.triggerRefresh();
             this.router.navigate(['/roles']);
           });
         },
@@ -133,6 +137,8 @@ export class RoleFormComponent implements OnInit {
           this.ngZone.run(() => {
             this.isLoading = false;
             this.cdr.detectChanges();
+            // Trigger refresh in role-list component using the shared service
+            this.dataRefreshService.triggerRefresh();
             this.router.navigate(['/roles']);
           });
         },
