@@ -5,6 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { RequestService } from '../services/request.service';
 import { Ticket } from '../models/user.model';
 import { ChangeDetectorRef } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { DataRefreshService } from '../services/data-refresh.service';
 
 @Component({
   selector: 'app-ticket-list',
@@ -13,7 +17,7 @@ import { ChangeDetectorRef } from '@angular/core';
   templateUrl: './ticket-list.component.html',
   styleUrl: './ticket-list.component.css'
 })
-export class TicketListComponent implements OnInit {
+export class TicketListComponent implements OnInit, OnDestroy {
   tickets: Ticket[] = [];
   filteredTickets: Ticket[] = [];
   isLoading = true;
@@ -22,11 +26,33 @@ export class TicketListComponent implements OnInit {
   errorMsg = '';
 
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
+  private dataRefreshService = inject(DataRefreshService);
+
+  private refreshSubscription: Subscription | undefined;
 
   constructor(private requestService: RequestService) {}
 
   ngOnInit() {
     this.loadRequests();
+
+    // Subscribe to refresh events from other components
+    this.refreshSubscription = this.dataRefreshService.refresh$.subscribe(shouldRefresh => {
+      if (shouldRefresh) {
+        // Load requests when refresh is triggered
+        this.loadRequests();
+        // Reset the refresh flag after loading
+        setTimeout(() => {
+          this.dataRefreshService.resetRefreshFlag();
+        }, 100); // Small delay to ensure loading is complete
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
+    }
   }
 
   loadRequests() {

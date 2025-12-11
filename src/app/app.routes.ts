@@ -10,18 +10,18 @@ import { UserFormComponent } from './user-form/user-form.component';
 import { TicketFormComponent } from './ticket-form/ticket-form.component';
 import { EquipmentListComponent } from './equipment-list/equipment-list.component';
 import { EquipmentFormComponent } from './equipment-form/equipment-form.component';
-import { RoleListComponent } from './role-list/role-list';
-import { RoleFormComponent } from './role-form/role-form';
+import { RoleListComponent } from './role-list/role-list.component';
+import { RoleFormComponent } from './role-form/role-form.component';
 import { ProfileComponent } from './components/profile/profile.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  { 
-    path: '', 
-    component: LayoutComponent, 
-    canActivate: [authGuard], 
+  {
+    path: '',
+    component: LayoutComponent,
+    canActivate: [authGuard],
     children: [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'users/new', component: UserFormComponent },

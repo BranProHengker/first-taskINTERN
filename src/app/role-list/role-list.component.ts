@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { RequestService } from '../services/request.service';
+import { RoleService } from '../services/role.service';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -15,7 +15,7 @@ export class RoleListComponent implements OnInit {
   roles: any[] = [];
   isLoading = true;
   errorMsg: string = '';
-  private requestService = inject(RequestService);
+  private roleService = inject(RoleService);
   private authService = inject(AuthService);
 
   ngOnInit() {
@@ -25,7 +25,7 @@ export class RoleListComponent implements OnInit {
   loadRoles() {
     this.isLoading = true;
     this.errorMsg = '';
-    this.requestService.getRoles().subscribe({
+    this.roleService.getRoles().subscribe({
       next: (data) => {
         this.roles = Array.isArray(data) ? data : (data as any).content || [];
         this.isLoading = false;
@@ -54,7 +54,7 @@ export class RoleListComponent implements OnInit {
 
   deleteRole(id: number) {
     if (confirm('Are you sure you want to delete this role?')) {
-      this.requestService.deleteRole(id).subscribe({
+      this.roleService.deleteRole(id).subscribe({
         next: () => {
           this.loadRoles();
         },

@@ -1,9 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { RequestService } from '../services/request.service';
+import { RoleService } from '../services/role.service';
 import { ChangeDetectorRef } from '@angular/core';
+import { first } from 'rxjs/operators';
 
 @Component({
   selector: 'app-role-form',
@@ -14,16 +15,18 @@ import { ChangeDetectorRef } from '@angular/core';
 })
 export class RoleFormComponent implements OnInit {
   role: any = {
-    roleName: ''
+    roleName: '',
+    roleAccess: []
   };
   isEditMode = false;
   isLoading = false;
   errorMsg = '';
 
-  private requestService = inject(RequestService);
+  private roleService = inject(RoleService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
 
   ngOnInit() {
     console.log('RoleForm: Initializing form...');
@@ -37,43 +40,41 @@ export class RoleFormComponent implements OnInit {
   loadRole(id: number) {
     console.log('RoleForm: Loading role data for id:', id);
     this.isLoading = true;
-    // Ensure change detection runs before showing loading state
-    this.cdr.detectChanges();
 
-    this.requestService.getRoleById(id).subscribe({
-      next: (data) => {
-        console.log('RoleForm: Role data received:', data);
-        // Temporarily disable the form during data update to ensure proper binding
-        this.isLoading = true; // Keep loading state briefly
-
-        // Create a completely new object to force change detection
-        const newRole = { roleName: data.roleName };
-
-        // Update the role object with the new data
-        this.role = { ...newRole };
-
+    // Add timeout protection to prevent indefinite loading state
+    const timeoutId = setTimeout(() => {
+      if (this.isLoading) {
+        console.error('RoleForm: Load role timed out after 10 seconds');
         this.isLoading = false;
-        console.log('RoleForm: Data loaded, role:', this.role.roleName);
-
-        // Multiple change detection calls to ensure proper propagation
+        this.errorMsg = 'Failed to load role details due to timeout.';
         this.cdr.detectChanges();
+      }
+    }, 10000);
 
-        // Force an additional tick to ensure Angular processes the changes
-        setTimeout(() => {
-          this.cdr.detectChanges();
-        }, 0);
+    this.roleService.getRoleById(id).pipe(
+      first()
+    ).subscribe({
+      next: (data) => {
+        // Clear timeout if successful
+        clearTimeout(timeoutId);
 
-        // And one more timeout to ensure ngModel has time to update
-        setTimeout(() => {
+        // Ensure we update in the Angular zone
+        this.ngZone.run(() => {
+          this.role = data;
+          this.isLoading = false;
           this.cdr.detectChanges();
-        }, 10);
+        });
       },
       error: (err) => {
+        // Clear timeout if error
+        clearTimeout(timeoutId);
+
         console.error('RoleForm: Failed to load role', err);
-        this.isLoading = false;
-        this.errorMsg = 'Failed to load role details.';
-        // Trigger change detection to ensure the UI updates
-        this.cdr.detectChanges();
+        this.ngZone.run(() => {
+          this.isLoading = false;
+          this.errorMsg = 'Failed to load role details.' + (err?.message ? ` ${err.message}` : '');
+          this.cdr.detectChanges();
+        });
       }
     });
   }
@@ -89,32 +90,59 @@ export class RoleFormComponent implements OnInit {
       return;
     }
 
+    // Prepare the payload based on the operation
+    let payload: any;
+
     if (this.isEditMode) {
-      this.requestService.updateRole(this.role).subscribe({
+      // For edit, ensure we're sending the complete role data
+      payload = {
+        ...this.role,
+        roleAccess: this.role.roleAccess || []  // Ensure roleAccess is always an array
+      };
+
+      this.roleService.updateRole(payload).pipe(
+        first()
+      ).subscribe({
         next: () => {
-          this.isLoading = false;
-          this.cdr.detectChanges();
-          this.router.navigate(['/roles']);
+          this.ngZone.run(() => {
+            this.isLoading = false;
+            this.cdr.detectChanges();
+            this.router.navigate(['/roles']);
+          });
         },
         error: (err) => {
           console.error('Failed to update role', err);
-          this.isLoading = false;
-          this.errorMsg = 'Failed to update role.';
-          this.cdr.detectChanges();
+          this.ngZone.run(() => {
+            this.isLoading = false;
+            this.errorMsg = 'Failed to update role.';
+            this.cdr.detectChanges();
+          });
         }
       });
     } else {
-      this.requestService.createRole(this.role).subscribe({
+      // For create, make sure we only send the necessary fields
+      payload = {
+        roleName: this.role.roleName,
+        roleAccess: []  // Initialize as empty array for new roles
+      };
+
+      this.roleService.createRole(payload).pipe(
+        first()
+      ).subscribe({
         next: () => {
-          this.isLoading = false;
-          this.cdr.detectChanges();
-          this.router.navigate(['/roles']);
+          this.ngZone.run(() => {
+            this.isLoading = false;
+            this.cdr.detectChanges();
+            this.router.navigate(['/roles']);
+          });
         },
         error: (err) => {
           console.error('Failed to create role', err);
-          this.isLoading = false;
-          this.errorMsg = 'Failed to create role.';
-          this.cdr.detectChanges();
+          this.ngZone.run(() => {
+            this.isLoading = false;
+            this.errorMsg = 'Failed to create role. ' + (err?.error?.message || err?.message || '');
+            this.cdr.detectChanges();
+          });
         }
       });
     }

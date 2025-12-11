@@ -1,11 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { RequestService } from '../services/request.service';
 import { Ticket } from '../models/user.model';
-import { ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef, NgZone } from '@angular/core';
+import { NavigationEnd } from '@angular/router';
+import { filter, Subscription } from 'rxjs';
+import { DataRefreshService } from '../services/data-refresh.service';
 
 @Component({
   selector: 'app-ticket-detail',
@@ -17,10 +20,16 @@ import { ChangeDetectorRef } from '@angular/core';
 export class TicketDetailComponent implements OnInit {
   request: Ticket | null = null;
   isLoading = true;
+  currentRequestId: number | null = null;
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private requestService = inject(RequestService);
   private sanitizer = inject(DomSanitizer);
   private cdr = inject(ChangeDetectorRef);
+  private zone = inject(NgZone);
+  private dataRefreshService = inject(DataRefreshService);
+
+  private refreshSubscription: Subscription | undefined;
 
   imageBlobUrl: string | null = null;
   isStatusDropdownOpen = false;
@@ -35,6 +44,7 @@ export class TicketDetailComponent implements OnInit {
     const id = idParam ? Number(idParam) : null;
 
     if (id) {
+      this.currentRequestId = id;
       this.loadRequest(id);
     } else {
       console.error('Invalid or missing Request ID');
@@ -42,6 +52,37 @@ export class TicketDetailComponent implements OnInit {
       // Trigger change detection to ensure the UI updates
       this.cdr.detectChanges();
     }
+
+    // Listen for navigation events to reload data when navigating to the same route with different params
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        const currentIdParam = this.route.snapshot.paramMap.get('id');
+        const currentId = currentIdParam ? Number(currentIdParam) : null;
+
+        // Check if the route is still the same but the ID might have changed (or if the same ID was navigated to again)
+        if (currentId && currentId !== this.currentRequestId) {
+          // Load the new ticket if ID changed
+          this.currentRequestId = currentId;
+          this.loadRequest(currentId);
+        } else if (currentId === this.currentRequestId) {
+          // Reload the same ticket data if navigating to the same ticket again
+          // This handles the case where the data might have been updated externally
+          this.loadRequest
+        }
+      });
+
+    // Subscribe to refresh events from other components
+    this.refreshSubscription = this.dataRefreshService.refresh$.subscribe(shouldRefresh => {
+      if (shouldRefresh && this.currentRequestId) {
+        // Load the request when refresh is triggered
+        this.loadRequest(this.currentRequestId);
+        // Reset the refresh flag after loading
+        setTimeout(() => {
+          this.dataRefreshService.resetRefreshFlag();
+        }, 100); // Small delay to ensure loading is complete
+      }
+    });
   }
 
   loadRequest(id: number) {
@@ -63,6 +104,11 @@ export class TicketDetailComponent implements OnInit {
         console.log('TicketDetail: Data loaded, request:', this.request);
         // Trigger change detection to ensure the UI updates
         this.cdr.detectChanges();
+
+        // Use setTimeout to ensure UI updates after all async operations
+        setTimeout(() => {
+          this.cdr.detectChanges();
+        }, 0);
       },
       error: (err) => {
         console.error('TicketDetail: Request failed:', err);
@@ -76,11 +122,22 @@ export class TicketDetailComponent implements OnInit {
   }
 
   loadImage(filename: string) {
+    // Revoke previous blob URL to prevent memory leaks if there was one
+    if (this.imageBlobUrl) {
+      URL.revokeObjectURL(this.imageBlobUrl);
+      this.imageBlobUrl = null;
+    }
+
     this.requestService.getCaptureImage(filename).subscribe({
       next: (blob) => {
         this.imageBlobUrl = URL.createObjectURL(blob);
-        // Trigger change detection after image is loaded
+        // Force change detection multiple times to ensure the UI updates
         this.cdr.detectChanges();
+
+        // Additional change detection on next tick to ensure rendering
+        Promise.resolve().then(() => {
+          this.cdr.detectChanges();
+        });
       },
       error: (err) => {
         console.error('Failed to load image blob', err);
@@ -166,10 +223,20 @@ export class TicketDetailComponent implements OnInit {
       case 'open': return 'bg-green-500/10 text-green-400 border-green-500/20';
       case 'in progress':
       case 'on progress': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-      case 'reject': return 'bg-red-500/10 text-red-400 border-red-500/20';
+      case 'reject': return 'bg-red-500/10 text-yellow-400 border-red-500/20';
       case 'close':
-      case 'closed': return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+      case 'closed': return 'bg-gray-500/10 text-yellow-400 border-gray-500/20';
       default: return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
+    }
+    // Revoke the image blob URL to prevent memory leaks
+    if (this.imageBlobUrl) {
+      URL.revokeObjectURL(this.imageBlobUrl);
     }
   }
 

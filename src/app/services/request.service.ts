@@ -176,9 +176,30 @@ export class RequestService {
   }
 
   createRequest(ticketData: any): Observable<any> {
-    // Return regular post without observing full response to match original setup
-    // but keep enhanced error handling
-    return this.http.post(this.baseUrl, ticketData).pipe(
+    // Need to handle formData differently - backend might return plain text
+    // instead of JSON, so we'll override the response type
+    return this.http.post(this.baseUrl, ticketData, {
+      // Expect text response in case backend doesn't send proper JSON
+      responseType: 'text',
+      // Override content-type so browser sets the correct boundary for multipart/form-data
+      headers: {}
+    }).pipe(
+      map(response => {
+        // Try to parse response as JSON, but handle plain text as well
+        if (!response) {
+          // If there's no response body, return empty object
+          return {};
+        }
+
+        try {
+          // Attempt to parse response as JSON
+          return JSON.parse(response);
+        } catch (e) {
+          // If parsing fails, return the raw response
+          console.warn('Response is not valid JSON:', response);
+          return { rawResponse: response };
+        }
+      }),
       tap({
         error: (err) => {
           console.error('RequestService: createRequest failed', err);

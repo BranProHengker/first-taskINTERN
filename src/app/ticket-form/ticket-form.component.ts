@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RequestService } from '../services/request.service';
 import { Ticket } from '../models/user.model';
+import { DataRefreshService } from '../services/data-refresh.service';
 
 @Component({
   selector: 'app-ticket-form',
@@ -55,6 +56,7 @@ export class TicketFormComponent implements OnInit {
   private requestService = inject(RequestService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private dataRefreshService = inject(DataRefreshService);
 
   ngOnInit() {
     this.loadEquipments();
@@ -204,6 +206,8 @@ export class TicketFormComponent implements OnInit {
       this.requestService.updateRequest(this.ticket).subscribe({
         next: () => {
           this.isLoading = false;
+          // Trigger refresh in ticket-list component using the shared service
+          this.dataRefreshService.triggerRefresh();
           this.router.navigate(['/ticket-list']);
         },
         error: (err) => {
@@ -288,6 +292,9 @@ export class TicketFormComponent implements OnInit {
         next: (response) => {
           this.isLoading = false;
           console.log('Ticket created successfully via POST /api/Request', response);
+
+          // Trigger refresh in ticket-list component using the shared service
+          this.dataRefreshService.triggerRefresh();
           this.router.navigate(['/ticket-list']);
         },
         error: (err) => {

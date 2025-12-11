@@ -108,7 +108,7 @@
 
 
                <!-- Bagian Capture -->
-               <div class="mt-8" *ngIf="request.capture">
+               <div class="mt-8" *ngIf="request && request.capture">
                   <h3 class="text-xl font-bold text-white mb-2">Capture</h3>
                   <div class="bg-white/5 p-4 rounded-xl border border-white/5">
                      <!-- Loading State -->
@@ -130,7 +130,7 @@
                </div>
 
                <!-- Location if available -->
-               <div *ngIf="request.latitude && request.longitude" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div *ngIf="request && (request.latitude !== undefined && request.latitude !== null) && (request.longitude !== undefined && request.longitude !== null)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div class="p-4 bg-white/5 rounded-xl border border-white/5">
                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Latitude</h4>
                     <p class="font-mono text-white text-lg">{{ request.latitude }}</p>
