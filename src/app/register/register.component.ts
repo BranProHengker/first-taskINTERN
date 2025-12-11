@@ -40,8 +40,11 @@ export class RegisterComponent {
 
   onRegister() {
     this.submitted = true;  // Mark form as submitted to show validation errors
+
+    // Mark all fields as touched to ensure validation messages show immediately
     this.registerForm.markAllAsTouched();
 
+    // Check form validity immediately and return if invalid
     if (this.registerForm.invalid) {
       return;
     }
