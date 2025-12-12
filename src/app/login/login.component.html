@@ -5,8 +5,8 @@
     <div class="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-pulse" style="background-color: #3A4750; animation-delay: 2s"></div>
   </div>
 
-  <div class="relative z-10 w-full max-w-md p-8 glass-panel rounded-2xl shadow-2xl border-l border-t border-white/10">
-    <div class="text-center mb-8">
+  <div class="relative z-10 w-full max-w-md p-8 glass-panel rounded-2xl shadow-2xl border-l border-t border-white/10 animate-fade-in">
+    <div class="text-center mb-8 animate-slide-up">
       <!-- Replaced div with logo image -->
       <div class="w-24 h-24 mx-auto mb-4 flex items-center justify-center">
         <img src="/Main-logo.png" alt="Logo" class="w-full h-full object-contain drop-shadow-lg">
@@ -15,7 +15,7 @@
       <!-- <p class="text-gray-400 text-sm mt-2 tracking-widest uppercase">Access Your Dashboard</p> -->
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="space-y-6">
+    <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="space-y-6 animate-slide-up-delay-1">
       <div class="space-y-2">
         <label class="text-xs font-bold text-gray-500 tracking-wider uppercase ml-1">Email Address</label>
         <input
@@ -24,7 +24,7 @@
           class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0"
           placeholder="name@company.com"
         >
-        <div *ngIf="email?.invalid && submitted" class="text-red-500 text-xs mt-1">
+        <div *ngIf="email?.invalid && submitted" class="text-red-500 text-xs mt-1 animate-shake">
           <div *ngIf="email?.errors?.['required']">Email is required.</div>
           <div *ngIf="email?.errors?.['email']">Please enter a valid email address.</div>
         </div>
@@ -53,20 +53,20 @@
             </svg>
           </button>
         </div>
-        <div *ngIf="password?.invalid && submitted" class="text-red-500 text-xs mt-1">
+        <div *ngIf="password?.invalid && submitted" class="text-red-500 text-xs mt-1 animate-shake">
           <div *ngIf="password?.errors?.['required']">Password is required.</div>
           <div *ngIf="password?.errors?.['minlength']">Password must be at least 5 characters long.</div>
         </div>
       </div>
 
-      <div *ngIf="errorMsg" class="text-red-500 text-sm text-center bg-red-500/10 p-2 rounded border border-red-500/20">
+      <div *ngIf="errorMsg" class="text-red-500 text-sm text-center bg-red-500/10 p-2 rounded border border-red-500/20 animate-shake">
         {{ errorMsg }}
       </div>
 
       <button
         type="submit"
         [disabled]="isLoading"
-        class="w-full py-3.5 rounded-lg btn-primary relative overflow-hidden group mt-4 disabled:opacity-50 cursor-pointer"
+        class="w-full py-3.5 rounded-lg btn-primary relative overflow-hidden group mt-4 disabled:opacity-50 cursor-pointer animate-slide-up-delay-2"
       >
         <span class="relative z-10 tracking-widest uppercase text-sm font-bold">
           {{ isLoading ? 'Authenticating...' : 'Sign In' }}
@@ -74,7 +74,7 @@
       </button>
     </form>
 
-    <div class="mt-8 text-center text-gray-500 text-xs">
+    <div class="mt-8 text-center text-gray-500 text-xs animate-slide-up-delay-3">
       <p>Don't have an account? <a href="/register" class="cursor-pointer hover:text-white transition" style="color: var(--color-primary)">Register</a></p>
     </div>
   </div>

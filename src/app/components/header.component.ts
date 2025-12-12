@@ -1,12 +1,14 @@
-import { Component, HostListener, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { NotificationService } from '../services/notification.service';
+import { Notification } from '../services/notification.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, DatePipe],
   template: `
     <header class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-[#303841]/80 backdrop-blur-xl sticky top-0 z-20 shrink-0">
       <div class="flex items-center gap-3">
@@ -19,12 +21,53 @@ import { AuthService } from '../services/auth.service';
         </div>
       </div>
       <div class="flex items-center gap-4">
-        <div class="relative">
-          <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#303841] animate-ping-slow"></span>
-          <button class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 transition hover:text-white animate-hover-pulse">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-          </button>
+        <!-- Notification Bell -->
+        <div class="relative notification-container">
+          <div (click)="toggleNotifications()" class="relative cursor-pointer">
+            <button class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 transition hover:text-white animate-hover-pulse">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </button>
+            <!-- Unread Count Badge -->
+            <span *ngIf="unreadCount > 0"
+                  class="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-red-500 text-white text-xs rounded-full border-2 border-[#303841]">
+              {{ unreadCount > 9 ? '9+' : unreadCount }}
+            </span>
+          </div>
+
+          <!-- Notification Dropdown -->
+          <div *ngIf="showNotifications" class="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto glass-panel border border-white/10 rounded-xl shadow-xl z-50 animate-slide-down notification-panel">
+            <div class="px-4 py-3 border-b border-white/10">
+              <h3 class="font-semibold text-white">Notifications</h3>
+            </div>
+            <div *ngIf="notifications.length === 0" class="p-4 text-center text-gray-400">
+              No notifications
+            </div>
+            <div *ngFor="let notification of notifications; let i = index"
+                 [class.border-b]="i < notifications.length - 1"
+                 class="border-white/10 last:border-b-0">
+              <div
+                (click)="markAsRead(notification.id)"
+                class="p-4 cursor-pointer hover:bg-white/5 transition flex items-start gap-3"
+                [class.opacity-60]="notification.isRead">
+                <div class="mt-0.5">
+                  <svg *ngIf="!notification.isRead" class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <svg *ngIf="notification.isRead" class="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-white truncate">{{ notification.message }}</p>
+                  <p class="text-xs text-gray-400 mt-1">{{ notification.createdAt | date:'short' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
         <div class="h-8 w-[1px] bg-white/10"></div>
         <div class="relative dropdown-container" [class.open]="isDropdownOpen">
           <div (click)="toggleDropdown()" class="flex items-center gap-3 pl-2 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition animate-hover-pulse">
@@ -102,19 +145,74 @@ import { AuthService } from '../services/auth.service';
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    .glass-panel {
+      background: rgba(48, 56, 65, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
   `]
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
   authService = inject(AuthService);
+  notificationService = inject(NotificationService);
   currentUser = this.authService.getCurrentUser();
   isDropdownOpen = false;
+  notifications: Notification[] = [];
+  unreadCount = 0;
+  showNotifications = false;
 
   get initials(): string {
     return this.currentUser?.name?.substring(0, 2).toUpperCase() || 'GU';
   }
 
+  ngOnInit() {
+    if (this.currentUser) {
+      // Using userId from the current user, falling back to a default value if not available
+      const userId = this.currentUser.userId || 1; // Using userId from the LoginResponse
+      this.loadNotifications(userId);
+    }
+  }
+
+  loadNotifications(userId: number) {
+    this.notificationService.getNotificationsByRow(userId).subscribe({
+      next: (notifications) => {
+        this.notifications = notifications;
+        this.unreadCount = this.notificationService.countUnread(notifications);
+      },
+      error: (error) => {
+        console.error('Error fetching notifications:', error);
+      }
+    });
+  }
+
+  toggleNotifications() {
+    this.showNotifications = !this.showNotifications;
+  }
+
+  markAsRead(notificationId: number) {
+    this.notificationService.markAsRead(notificationId).subscribe({
+      next: () => {
+        // Update the local notification state
+        const notification = this.notifications.find(n => n.id === notificationId);
+        if (notification) {
+          notification.isRead = true;
+          this.unreadCount = this.notificationService.countUnread(this.notifications);
+        }
+
+        // Hide notifications panel after clicking one
+        this.showNotifications = false;
+      },
+      error: (error) => {
+        console.error('Error marking notification as read:', error);
+      }
+    });
+  }
+
   toggleDropdown() {
     this.isDropdownOpen = !this.isDropdownOpen;
+    // Hide notifications panel when opening user dropdown
+    this.showNotifications = false;
   }
 
   closeDropdown() {
@@ -129,8 +227,19 @@ export class HeaderComponent {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event) {
     const target = event.target as HTMLElement;
-    if (!target.closest('.dropdown-container') && this.isDropdownOpen) {
-      this.closeDropdown();
+    const notificationPanel = document.querySelector('.notification-panel');
+
+    if (!target.closest('.dropdown-container') &&
+        !target.closest('.notification-container') &&
+        (this.isDropdownOpen || this.showNotifications)) {
+
+      if (this.isDropdownOpen) {
+        this.closeDropdown();
+      }
+
+      if (this.showNotifications) {
+        this.showNotifications = false;
+      }
     }
   }
 }

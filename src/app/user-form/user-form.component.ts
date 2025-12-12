@@ -6,6 +6,7 @@ import { UserService } from '../services/user.service';
 import { RequestService } from '../services/request.service';
 import { User } from '../models/user.model';
 import { ChangeDetectorRef } from '@angular/core';
+import { passwordValidator } from '../validators/password.validator';
 
 @Component({
   selector: 'app-user-form',
@@ -39,12 +40,45 @@ export class UserFormComponent implements OnInit {
   } = {};
   isRoleDropdownOpen = false;
   selectedRoleName: string | null = null;
+  showPassword = false;
 
   private userService = inject(UserService);
   private requestService = inject(RequestService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+
+  toggleShowPassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  validatePasswordRealTime() {
+    if (!this.isEditMode && this.user.password) {
+      // Use the custom password validator
+      const passwordValidation = passwordValidator()({ value: this.user.password } as any);
+      if (passwordValidation) {
+        if (passwordValidation['minLength']) {
+          this.fieldErrors.password = `Password must be at least ${passwordValidation['minLength'].requiredLength} characters long. (Current: ${passwordValidation['minLength'].actualLength})`;
+        } else if (passwordValidation['noUpperCase']) {
+          this.fieldErrors.password = 'Password must contain at least one uppercase letter.';
+        } else if (passwordValidation['noLowerCase']) {
+          this.fieldErrors.password = 'Password must contain at least one lowercase letter.';
+        } else if (passwordValidation['noNumber']) {
+          this.fieldErrors.password = 'Password must contain at least one number.';
+        } else if (passwordValidation['noSpecialChar']) {
+          this.fieldErrors.password = 'Password must contain at least one special character.';
+        }
+      } else {
+        // If there are no validation errors, clear the password error
+        delete this.fieldErrors.password;
+      }
+    } else if (!this.user.password) {
+      // If password is empty and not in edit mode, show required error
+      if (!this.isEditMode) {
+        this.fieldErrors.password = 'Password is required';
+      }
+    }
+  }
 
   ngOnInit() {
     console.log('UserForm: Initializing form...');
@@ -56,6 +90,8 @@ export class UserFormComponent implements OnInit {
     } else {
       // Just load roles for new user creation
       this.loadRoles();
+      // Initialize real-time password validation for new user forms
+      this.validatePasswordRealTime();
     }
   }
 
@@ -196,11 +232,8 @@ export class UserFormComponent implements OnInit {
 
     // Validasi password jika dalam mode create
     if (!this.isEditMode) {
-      if (!this.user.password?.trim()) {
-        this.fieldErrors.password = 'Password is required';
-      } else if (this.user.password && this.user.password.length < 5) {
-        this.fieldErrors.password = 'Password must be at least 5 characters long';
-      }
+      // Run validation one more time before submission to ensure fieldErrors is accurate
+      this.validatePasswordRealTime();
     }
 
     if (!this.user.roleId || this.user.roleId <= 0) {

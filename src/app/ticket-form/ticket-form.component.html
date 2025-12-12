@@ -64,44 +64,28 @@
                   <div *ngIf="fieldErrors.equipmentId" class="text-red-500 text-xs mt-1">{{ fieldErrors.equipmentId }}</div>
                </div>
 
-               <!-- Services Dropdown -->
+               <!-- Services Selection (Checkboxes) -->
                <div class="space-y-2">
                   <label class="text-xs font-bold text-gray-500 tracking-wider uppercase ml-1">Services</label>
-                  <div class="relative services-dropdown">
-                     <button
-                        type="button"
-                        (click)="isServicesDropdownOpen = !isServicesDropdownOpen"
-                        class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0 flex items-center justify-between bg-[#303841] text-white"
-                     >
-                        <span>{{ selectedServiceIds && selectedServiceIds.length > 0 ? selectedServiceIds.length + ' service(s) selected' : 'Select Services' }}</span>
-                        <svg class="w-4 h-4 ml-2 transition-transform duration-200" [class.rotate-180]="isServicesDropdownOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                     </button>
-
+                  <div class="border border-white/10 rounded-lg p-4 max-h-80 overflow-y-auto bg-[#303841]">
                      <div
-                        *ngIf="isServicesDropdownOpen"
-                        class="absolute z-10 mt-1 w-full bg-[#3A4750] border border-white/10 rounded-lg shadow-lg overflow-hidden max-h-60 overflow-y-auto"
+                        *ngFor="let service of services; let i = index"
+                        class="py-4 text-sm text-gray-300 hover:bg-white/10 hover:text-white cursor-pointer flex items-start justify-between transition border-b border-white/5 last:border-b-0"
+                        (click)="toggleServiceSelection(service.id)"
                      >
-                        <div
-                           *ngFor="let service of services; let i = index"
-                           class="px-4 py-3 text-sm text-gray-300 hover:bg-white/10 hover:text-white cursor-pointer border-t border-white/5 first:border-t-0 flex items-center justify-between transition"
-                           (click)="toggleServiceSelection(service.id)"
-                        >
-                           <span class="flex-1">{{ service.serviceName || 'Service ' + service.id }}</span>
-                           <div class="flex items-center ml-2">
-                              <input
-                                 type="checkbox"
-                                 [checked]="isSelectedService(service.id)"
-                                 class="w-4 h-4 rounded border-gray-600 bg-white/5 text-[var(--color-primary)] focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                                 (click)="$event.stopPropagation()"
-                              >
-                           </div>
+                        <span class="flex-1 pt-0.5">{{ service.serviceName || 'Service ' + service.id }}</span>
+                        <div class="flex items-center ml-2 pt-0.5">
+                           <input
+                              type="checkbox"
+                              [checked]="isSelectedService(service.id)"
+                              class="w-5 h-5 rounded border-gray-600 bg-white/5 text-[var(--color-primary)] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                              (click)="$event.stopPropagation()"
+                           >
                         </div>
                      </div>
                   </div>
+                  <div *ngIf="fieldErrors.services" class="text-red-500 text-xs mt-1">{{ fieldErrors.services }}</div>
                </div>
-               <div *ngIf="fieldErrors.services" class="text-red-500 text-xs mt-1">{{ fieldErrors.services }}</div>
 
                <!-- Description -->
                <div class="space-y-2">
@@ -203,9 +187,9 @@
                <!-- Capture / Attachment -->
                <div class="space-y-2">
                   <label class="text-xs font-bold text-gray-500 tracking-wider uppercase ml-1">Attachment / Capture</label>
-                  
+
                   <div class="border-2 border-dashed border-white/10 rounded-xl bg-white/0.02 p-6 flex flex-col items-center justify-center gap-4 transition hover:border-white/20 hover:bg-white/5 group cursor-pointer" (click)="hiddenFileInput.nativeElement.click()">
-                     
+
                      <!-- Preview -->
                      <div *ngIf="imagePreview" class="relative w-full max-w-sm rounded-lg overflow-hidden border border-white/10" (click)="$event.stopPropagation()">
                         <img [src]="imagePreview" class="w-full h-48 object-cover bg-black/40">
@@ -216,12 +200,12 @@
 
                      <!-- Upload Area -->
                      <div *ngIf="!imagePreview" class="text-center w-full pointer-events-none">
-                        <input 
-                           type="file" 
-                           #hiddenFileInput 
-                           (change)="onFileSelected($event)" 
-                           accept="image/*" 
-                           capture="environment" 
+                        <input
+                           type="file"
+                           #hiddenFileInput
+                           (change)="onFileSelected($event)"
+                           accept="image/*"
+                           capture="environment"
                            class="hidden"
                         >
                         <div class="flex flex-col items-center gap-2">
@@ -245,8 +229,8 @@
                <!-- Action Buttons -->
                <div class="pt-6 border-t border-white/5 flex justify-end gap-4">
                   <a routerLink="/ticket-list" class="px-6 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:bg-white/5 hover:text-white text-sm font-medium transition">Cancel</a>
-                  <button 
-                     type="submit" 
+                  <button
+                     type="submit"
                      [disabled]="isLoading"
                      class="px-8 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95 flex items-center gap-2"
                      style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 rgba(215, 35, 35, 0.39)"

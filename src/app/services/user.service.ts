@@ -102,6 +102,25 @@ export class UserService {
       newPassword: newPassword
     };
 
-    return this.http.post(`${this.baseUrl}/api/User/ChangePassword`, body, { headers });
+    // Using responseType 'text' to handle non-JSON responses that might cause JSON.parse errors
+    return this.http.post(`${this.baseUrl}/api/User/ChangePassword`, body, {
+      headers,
+      responseType: 'text' // Handle response as text to prevent JSON parsing errors
+    }).pipe(
+      map(response => {
+        // If response is empty, return a success message
+        if (!response) {
+          return { message: 'Password changed successfully' };
+        }
+
+        // Try to parse as JSON if it's a valid JSON string, otherwise return as text
+        try {
+          return JSON.parse(response);
+        } catch (e) {
+          // If it's not valid JSON, return the text response as a message
+          return { message: response || 'Password changed successfully' };
+        }
+      })
+    );
   }
 }

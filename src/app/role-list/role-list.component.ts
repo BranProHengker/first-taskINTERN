@@ -88,6 +88,8 @@ export class RoleListComponent implements OnInit {
           this.loadRoles();
           // Also trigger refresh to notify other components
           this.dataRefreshService.triggerRefresh();
+          // Clear any previous error messages
+          this.errorMsg = '';
         },
         error: (err) => {
           console.error('Failed to delete role', err);
@@ -96,7 +98,7 @@ export class RoleListComponent implements OnInit {
               (err.error.includes('Check if role is in use') ||
                err.error.includes('has dependencies') ||
                err.error.includes('Role masih dipakai oleh user'))) {
-            this.errorMsg = 'Role masih dipakai oleh user';
+            this.errorMsg = 'Role still in use by a user';
           } else {
             this.errorMsg = 'Failed to delete role. Please try again.';
           }

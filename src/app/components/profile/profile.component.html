@@ -128,10 +128,11 @@
                      class="text-red-500 text-xs mt-1">
                   <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['required']">New password is required</div>
                   <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['minlength'] && !changePasswordForm.get('newPassword')?.errors?.['required']">Password must be at least 6 characters</div>
-                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noUpperCase'] && !changePasswordForm.get('newPassword')?.errors?.['required']">Password must contain at least one uppercase letter</div>
-                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noLowerCase'] && !changePasswordForm.get('newPassword')?.errors?.['required']">Password must contain at least one lowercase letter</div>
-                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noNumber'] && !changePasswordForm.get('newPassword')?.errors?.['required']">Password must contain at least one number</div>
-                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noSpecialChar'] && !changePasswordForm.get('newPassword')?.errors?.['required']">Password must contain at least one special character</div>
+                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noUpperCase'] && !changePasswordForm.get('newPassword')?.errors?.['required'] && !changePasswordForm.get('newPassword')?.errors?.['minlength']">Password must contain at least one uppercase letter</div>
+                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noLowerCase'] && !changePasswordForm.get('newPassword')?.errors?.['required'] && !changePasswordForm.get('newPassword')?.errors?.['minlength'] && !changePasswordForm.get('newPassword')?.errors?.['noUpperCase']">Password must contain at least one lowercase letter</div>
+                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noNumber'] && !changePasswordForm.get('newPassword')?.errors?.['required'] && !changePasswordForm.get('newPassword')?.errors?.['minlength'] && !changePasswordForm.get('newPassword')?.errors?.['noUpperCase'] && !changePasswordForm.get('newPassword')?.errors?.['noLowerCase']">Password must contain at least one number</div>
+                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['noSpecialChar'] && !changePasswordForm.get('newPassword')?.errors?.['required'] && !changePasswordForm.get('newPassword')?.errors?.['minlength'] && !changePasswordForm.get('newPassword')?.errors?.['noUpperCase'] && !changePasswordForm.get('newPassword')?.errors?.['noLowerCase'] && !changePasswordForm.get('newPassword')?.errors?.['noNumber']">Password must contain at least one special character</div>
+                  <div *ngIf="changePasswordForm.get('newPassword')?.errors?.['sameAsOldPassword']">New password cannot be the same as the old password</div>
                 </div>
               </div>
               

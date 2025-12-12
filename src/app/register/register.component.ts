@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { passwordValidator } from '../validators/password.validator';
 
 @Component({
   selector: 'app-register',
@@ -28,7 +29,7 @@ export class RegisterComponent {
       emailAddress: ['', [Validators.required, Validators.email]],
       companyName: ['', [Validators.required, Validators.minLength(2)]],
       telp: ['', [Validators.pattern(/^[\+]?[0-9\s\-\(\)]+$/)]],
-      password: ['', [Validators.required, Validators.minLength(5)]]
+      password: ['', [Validators.required, passwordValidator()]]
     });
   }
 
