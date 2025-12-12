@@ -64,23 +64,25 @@
                   <div *ngIf="fieldErrors.equipmentId" class="text-red-500 text-xs mt-1">{{ fieldErrors.equipmentId }}</div>
                </div>
 
-               <!-- Services Selection (Checkboxes) -->
+               <!-- Services Selection (Checkboxes) - 2 Columns with 5 options each -->
                <div class="space-y-2">
                   <label class="text-xs font-bold text-gray-500 tracking-wider uppercase ml-1">Services</label>
-                  <div class="border border-white/10 rounded-lg p-4 max-h-80 overflow-y-auto bg-[#303841]">
-                     <div
-                        *ngFor="let service of services; let i = index"
-                        class="py-4 text-sm text-gray-300 hover:bg-white/10 hover:text-white cursor-pointer flex items-start justify-between transition border-b border-white/5 last:border-b-0"
-                        (click)="toggleServiceSelection(service.id)"
-                     >
-                        <span class="flex-1 pt-0.5">{{ service.serviceName || 'Service ' + service.id }}</span>
-                        <div class="flex items-center ml-2 pt-0.5">
-                           <input
-                              type="checkbox"
-                              [checked]="isSelectedService(service.id)"
-                              class="w-5 h-5 rounded border-gray-600 bg-white/5 text-\[var(--color-primary)] focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                              (click)="$event.stopPropagation()"
-                           >
+                  <div class="border border-white/10 rounded-lg p-6 max-h-96 overflow-y-auto bg-[#303841]">
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div
+                           *ngFor="let service of services; let i = index"
+                           class="py-4 px-5 text-base text-gray-300 hover:bg-white/10 hover:text-white cursor-pointer flex items-center justify-between transition border border-white/10 rounded-lg"
+                           (click)="toggleServiceSelection(service.id)"
+                        >
+                           <span class="flex-1">{{ service.serviceName || 'Service ' + service.id }}</span>
+                           <div class="flex items-center ml-2">
+                              <input
+                                 type="checkbox"
+                                 [checked]="isSelectedService(service.id)"
+                                 class="w-6 h-6 rounded border-gray-600 bg-white/5 text-\[var(--color-primary)] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                                 (click)="$event.stopPropagation()"
+                              >
+                           </div>
                         </div>
                      </div>
                   </div>

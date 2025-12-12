@@ -79,6 +79,7 @@
                     formControlName="oldPassword"
                     class="w-full px-4 py-3 rounded-lg input-field text-sm focus:ring-0 pr-10"
                     placeholder="Enter old password"
+                    (blur)="validateOldPassword()"
                   />
                   <button
                     type="button"
@@ -94,9 +95,13 @@
                     </svg>
                   </button>
                 </div>
-                <div *ngIf="changePasswordForm.get('oldPassword')?.invalid && changePasswordForm.get('oldPassword')?.touched"
+                <div *ngIf="changePasswordForm.get('oldPassword')?.errors?.['required'] && changePasswordForm.get('oldPassword')?.touched"
                      class="text-red-500 text-xs mt-1">
                   Old password is required
+                </div>
+                <div *ngIf="changePasswordForm.get('oldPassword')?.errors?.['incorrectOldPassword'] && changePasswordForm.get('oldPassword')?.touched"
+                     class="text-red-500 text-xs mt-1">
+                  Old password is incorrect
                 </div>
               </div>
 

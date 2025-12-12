@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { User } from '../models/user.model';
 
@@ -120,6 +120,26 @@ export class UserService {
           // If it's not valid JSON, return the text response as a message
           return { message: response || 'Password changed successfully' };
         }
+      }),
+      catchError(error => {
+        // Propagate the error with its body so the component can handle different types of errors
+        // This ensures that error responses (like 400) are properly handled by the component
+        if (error.error) {
+          // If the error has a body, return it for the component to handle
+          try {
+            // Try to parse error response as JSON if it's a string
+            if (typeof error.error === 'string') {
+              error.parsedError = JSON.parse(error.error);
+            } else {
+              error.parsedError = error.error;
+            }
+          } catch (e) {
+            // If parsing fails, use the raw error as the parsed error
+            error.parsedError = error.error;
+          }
+        }
+        // Re-throw the error so the component can catch and handle it
+        throw error;
       })
     );
   }

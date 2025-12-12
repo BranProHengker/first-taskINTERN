@@ -71,6 +71,56 @@ export class ProfileComponent {
   }
 
 
+  // Function to validate old password in real-time
+  validateOldPassword() {
+    const oldPasswordValue = this.changePasswordForm.get('oldPassword')?.value;
+
+    // Only validate if old password field has a value
+    if (oldPasswordValue && oldPasswordValue.trim() !== '') {
+      // Call the change password API with the same old and new password to test if old password is valid
+      // This will fail if the old password is incorrect, which we can use for validation
+      this.userService.changePassword(oldPasswordValue, oldPasswordValue).subscribe({
+        next: (response) => {
+          // If the call succeeds (which shouldn't happen since we're using same old and new passwords),
+          // we can clear any incorrect old password error
+          if (this.changePasswordForm.get('oldPassword')?.errors?.['incorrectOldPassword']) {
+            const currentErrors = { ...this.changePasswordForm.get('oldPassword')?.errors };
+            delete currentErrors['incorrectOldPassword'];
+
+            if (Object.keys(currentErrors).length === 0) {
+              this.changePasswordForm.get('oldPassword')?.setErrors(null);
+            } else {
+              this.changePasswordForm.get('oldPassword')?.setErrors(currentErrors);
+            }
+          }
+        },
+        error: (error) => {
+          // Check if the error is specifically about the old password being incorrect
+          if ((typeof error.error === 'string' &&
+               (error.error.toLowerCase().includes('old password') && error.error.toLowerCase().includes('incorrect') ||
+                error.error.toLowerCase().includes('invalid old password') ||
+                error.error.toLowerCase().includes('current password') && error.error.toLowerCase().includes('incorrect'))) ||
+              (typeof error.error === 'object' && error.error?.message &&
+               (error.error.message.toLowerCase().includes('old password') && error.error.message.toLowerCase().includes('incorrect') ||
+                error.error.message.toLowerCase().includes('invalid old password') ||
+                error.error.message.toLowerCase().includes('current password') && error.error.message.toLowerCase().includes('incorrect'))) ||
+              // Also check error.parsedError if it exists (from our service error handling)
+              (error.parsedError && typeof error.parsedError === 'string' &&
+               (error.parsedError.toLowerCase().includes('old password') && error.parsedError.toLowerCase().includes('incorrect') ||
+                error.parsedError.toLowerCase().includes('invalid old password') ||
+                error.parsedError.toLowerCase().includes('current password') && error.parsedError.toLowerCase().includes('incorrect'))) ||
+              (error.parsedError && typeof error.parsedError === 'object' && error.parsedError?.message &&
+               (error.parsedError.message.toLowerCase().includes('old password') && error.parsedError.message.toLowerCase().includes('incorrect') ||
+                error.parsedError.message.toLowerCase().includes('invalid old password') ||
+                error.parsedError.message.toLowerCase().includes('current password') && error.parsedError.message.toLowerCase().includes('incorrect')))) {
+            // Set the form control as invalid with the specific error
+            this.changePasswordForm.get('oldPassword')?.setErrors({ incorrectOldPassword: true });
+          }
+        }
+      });
+    }
+  }
+
   onChangePasswordSubmit() {
     if (this.changePasswordForm.valid) {
       this.isSubmitting = true;
@@ -122,6 +172,44 @@ export class ProfileComponent {
             } else if (error.status === 401) {
               // Unauthorized error
               errorMessage = 'Session expired. Please log in again.';
+            } else if (error.status === 400) {
+              // Check if this is specifically the old password validation error
+              if ((typeof error.error === 'string' &&
+                   (error.error.toLowerCase().includes('old password') && error.error.toLowerCase().includes('incorrect') ||
+                    error.error.toLowerCase().includes('invalid old password') ||
+                    error.error.toLowerCase().includes('current password') && error.error.toLowerCase().includes('incorrect'))) ||
+                  (typeof error.error === 'object' && error.error?.message &&
+                   (error.error.message.toLowerCase().includes('old password') && error.error.message.toLowerCase().includes('incorrect') ||
+                    error.error.message.toLowerCase().includes('invalid old password') ||
+                    error.error.message.toLowerCase().includes('current password') && error.error.message.toLowerCase().includes('incorrect'))) ||
+                  // Also check error.parsedError if it exists (from our service error handling)
+                  (error.parsedError && typeof error.parsedError === 'string' &&
+                   (error.parsedError.toLowerCase().includes('old password') && error.parsedError.toLowerCase().includes('incorrect') ||
+                    error.parsedError.toLowerCase().includes('invalid old password') ||
+                    error.parsedError.toLowerCase().includes('current password') && error.parsedError.toLowerCase().includes('incorrect'))) ||
+                  (error.parsedError && typeof error.parsedError === 'object' && error.parsedError?.message &&
+                   (error.parsedError.message.toLowerCase().includes('old password') && error.parsedError.message.toLowerCase().includes('incorrect') ||
+                    error.parsedError.message.toLowerCase().includes('invalid old password') ||
+                    error.parsedError.message.toLowerCase().includes('current password') && error.parsedError.message.toLowerCase().includes('incorrect')))) {
+                // Handle specific incorrect old password error
+                errorMessage = 'Old password is incorrect';
+
+                // Set the form control as invalid with the specific error
+                this.changePasswordForm.get('oldPassword')?.setErrors({ incorrectOldPassword: true });
+              } else {
+                // For other 400 errors, continue with existing logic
+                if (typeof error.error === 'object' && error.error?.message?.includes('same as old password')) {
+                  errorMessage = 'New password cannot be the same as the old password';
+                } else if (typeof error.error === 'string' && error.error.includes('same as old password')) {
+                  errorMessage = 'New password cannot be the same as the old password';
+                } else if (typeof error.error === 'object' && error.error?.message) {
+                  errorMessage = error.error.message;
+                } else if (error.error && typeof error.error === 'string') {
+                  errorMessage = error.error;
+                } else {
+                  errorMessage = 'Bad request. Please check your input.';
+                }
+              }
             } else if (typeof error === 'object' && error.message && error.message.includes('JSON.parse')) {
               // JSON parsing error - this usually means the password was changed successfully
               // but the response wasn't properly formatted as JSON
@@ -159,6 +247,9 @@ export class ProfileComponent {
           });
         }
       });
+    } else {
+      // Mark all fields as touched to show validation errors
+      this.changePasswordForm.markAllAsTouched();
     }
   }
 
