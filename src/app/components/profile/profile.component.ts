@@ -24,6 +24,7 @@ export class ProfileComponent {
   messageType: 'success' | 'error' = 'success';
   showOldPassword = false;
   showNewPassword = false;
+  showConfirmNewPassword = false;
 
   changePasswordForm: FormGroup;
 
@@ -34,8 +35,9 @@ export class ProfileComponent {
         Validators.required,
         Validators.minLength(6),
         this.passwordValidator
-      ]]
-    });
+      ]],
+      confirmNewPassword: ['', Validators.required]
+    }, { validators: this.passwordMatchValidator });
 
     // Add validation to ensure new password is not the same as old password
     this.changePasswordForm.get('newPassword')?.setValidators([
@@ -55,6 +57,17 @@ export class ProfileComponent {
     }
 
     return null; // Valid if not the same
+  }
+
+  passwordMatchValidator(form: FormGroup) {
+    const newPassword = form.get('newPassword')?.value;
+    const confirmNewPassword = form.get('confirmNewPassword')?.value;
+
+    if (newPassword && confirmNewPassword && newPassword !== confirmNewPassword) {
+      return { passwordMismatch: true };
+    }
+
+    return null; // Valid if matching
   }
 
 
@@ -155,6 +168,10 @@ export class ProfileComponent {
 
   toggleShowNewPassword() {
     this.showNewPassword = !this.showNewPassword;
+  }
+
+  toggleShowConfirmNewPassword() {
+    this.showConfirmNewPassword = !this.showConfirmNewPassword;
   }
 
   passwordValidator(control: any) {

@@ -29,7 +29,7 @@ export class TicketFormComponent implements OnInit {
   equipments: any[] = [];
   services: any[] = [];
   selectedServiceIds: number[] = [];
-  
+
   isEditMode = false;
   isLoading = false;
   errorMsg = '';
@@ -162,7 +162,7 @@ export class TicketFormComponent implements OnInit {
       }
     });
   }
-  
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -171,7 +171,10 @@ export class TicketFormComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = () => {
         this.imagePreview = reader.result;
-        this.cdr.detectChanges(); // Trigger change detection
+        // Panggil change detection setelah FileReader selesai
+        setTimeout(() => {
+          this.cdr.detectChanges();
+        }, 0);
       };
       reader.readAsDataURL(this.selectedFile);
       this.cdr.detectChanges(); // Trigger change detection
@@ -181,7 +184,10 @@ export class TicketFormComponent implements OnInit {
   removeFile() {
     this.selectedFile = null;
     this.imagePreview = null;
-    this.cdr.detectChanges(); // Trigger change detection
+    // Panggil change detection setelah menghapus file
+    setTimeout(() => {
+      this.cdr.detectChanges();
+    }, 0);
   }
 
   onSubmit() {
@@ -396,7 +402,10 @@ export class TicketFormComponent implements OnInit {
           this.ticket.longitude = position.coords.longitude;
           this.isGettingLocation = false;
           console.log('Location retrieved:', this.ticket.latitude, this.ticket.longitude);
-          this.cdr.detectChanges(); // Trigger change detection
+          // Panggil change detection setelah mendapatkan lokasi
+          setTimeout(() => {
+            this.cdr.detectChanges();
+          }, 0);
         },
         (error) => {
           this.isGettingLocation = false;
@@ -415,7 +424,10 @@ export class TicketFormComponent implements OnInit {
               this.locationError = "An unknown error occurred.";
               break;
           }
-          this.cdr.detectChanges(); // Trigger change detection
+          // Panggil change detection setelah mendapatkan error
+          setTimeout(() => {
+            this.cdr.detectChanges();
+          }, 0);
         },
         {
           enableHighAccuracy: true,
@@ -426,7 +438,10 @@ export class TicketFormComponent implements OnInit {
     } else {
       this.isGettingLocation = false;
       this.locationError = "Geolocation is not supported by this browser.";
-      this.cdr.detectChanges(); // Trigger change detection
+      // Panggil change detection setelah menentukan bahwa geolocation tidak didukung
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      }, 0);
     }
   }
 }
